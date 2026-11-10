@@ -1885,14 +1885,22 @@
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     /* ⚠️ এখানে Firebase Console থেকে আপনার কনফিগ বসান */
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+    Then, initialise Firebase and begin using the SDKs for the products that you'd like to use.
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyD_6H8GkYYzUkVzSxJD_qyf8v7xGauOlwE",
+  authDomain: "chat-app-50a2e.firebaseapp.com",
+  projectId: "chat-app-50a2e",
+  storageBucket: "chat-app-50a2e.firebasestorage.app",
+  messagingSenderId: "117970730614",
+  appId: "1:117970730614:web:3f8b1e93afcdc0ee55a957"
+};
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
