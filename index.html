@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>WhatsApp Ultra Pro — ১০০টি ফিচার সহ</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --wa-bg-deep: #0c1317;
+      --wa-bg-panel: #111b21;
+      --wa-bg-header: #202c33;
+      --wa-bg-chat: #0b141a;
+      --wa-border: #222d34;
+      --wa-green: #00a884;
+      --wa-green-bubble: #005c4b;
+      --wa-gray-bubble: #202c33;
+      --wa-text-main: #e9edef;
+      --wa-text-muted: #8696a0;
+      --wa-blue-tick: #53bdeb;
+      --wa-font: 'Segoe UI', 'Inter', sans-serif;
+    }
+
+    body.theme-pink {
+      --wa-bg-deep: #130912; --wa-bg-panel: #1c0f1b; --wa-bg-header: #2b172a; --wa-bg-chat: #160c15;
+      --wa-green: #f472b6; --wa-green-bubble: #9d174d; --wa-gray-bubble: #2b172a; --wa-blue-tick: #f472b6;
+    }
+    body.theme-light {
+      --wa-bg-deep: #d1d7db; --wa-bg-panel: #ffffff; --wa-bg-header: #f0f2f5; --wa-bg-chat: #efeae2;
+      --wa-border: #e9edef; --wa-green: #00a884; --wa-green-bubble: #d9fdd3; --wa-gray-bubble: #ffffff;
+      --wa-text-main: #111b21; --wa-text-muted: #667781;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--wa-bg-deep); color: var(--wa-text-main); font-family: var(--wa-font); font-size: 14px; }
+
+    #app { width: 100%; height: 100dvh; display: flex; align-items: center; justify-content: center; }
+
+    /* পিন লক ওভারলে */
+    .pin-lock-overlay {
+      position: fixed; inset: 0; background: var(--wa-bg-deep); z-index: 50000;
+      display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    }
+    .pin-lock-overlay.show { display: flex; }
+    .pin-dots { display: flex; gap: 10px; margin: 10px 0; }
+    .p-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--wa-green); }
+    .p-dot.active { background: var(--wa-green); box-shadow: 0 0 10px var(--wa-green); }
+    .pin-pad { display: grid; grid-template-columns: repeat(3, 65px); gap: 12px; }
+    .p-btn {
+      width: 65px; height: 65px; border-radius: 50%; background: var(--wa-bg-header); border: 1px solid var(--wa-border);
+      color: #fff; font-size: 20px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* WHATSAPP MAIN CONTAINER */
+    .wa-app-wrap { width: 100%; height: 100%; max-width: 1600px; display: flex; background: var(--wa-bg-panel); position: relative; }
+
+    /* ════════════ সাইডবার ════════════ */
+    .sidebar {
+      width: 100%; max-width: 400px; height: 100%; display: flex; flex-direction: column;
+      background: var(--wa-bg-panel); border-right: 1px solid var(--wa-border); z-index: 10;
+    }
+    .sidebar-header {
+      height: 60px; padding: 10px 14px; background: var(--wa-bg-header);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .profile-info-btn { display: flex; align-items: center; gap: 10px; cursor: pointer; background: none; border: none; color: inherit; text-align: left; }
+    .wa-avatar {
+      position: relative; width: 40px; height: 40px; border-radius: 50%; background: #6a7175;
+      display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .online-badge { position: absolute; bottom: 0; right: 0; width: 11px; height: 11px; background: var(--wa-green); border-radius: 50%; border: 2px solid var(--wa-bg-header); }
+
+    .header-icons { display: flex; align-items: center; gap: 4px; }
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent;
+      color: var(--wa-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .icon-btn:hover { background: rgba(255,255,255,0.08); color: var(--wa-text-main); }
+
+    /* স্টোরিজ বার */
+    .stories-container {
+      display: flex; gap: 12px; padding: 10px 14px; overflow-x: auto; background: var(--wa-bg-panel);
+      border-bottom: 1px solid var(--wa-border); scrollbar-width: none;
+    }
+    .story-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; flex-shrink: 0; }
+    .story-ring {
+      width: 46px; height: 46px; border-radius: 50%; padding: 2px;
+      background: linear-gradient(135deg, #00a884, #34b7f1); display: flex; align-items: center; justify-content: center;
+    }
+    .story-box { width: 100%; height: 100%; border-radius: 50%; background: #111b21; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+
+    /* সার্চ বক্স */
+    .search-wrap { padding: 7px 12px; background: var(--wa-bg-panel); border-bottom: 1px solid var(--wa-border); }
+    .search-box {
+      background: var(--wa-bg-header); border-radius: 8px; display: flex; align-items: center; padding: 0 10px; gap: 8px; height: 35px;
+    }
+    .search-box input { width: 100%; background: transparent; border: none; outline: none; color: #fff; font-size: 13px; }
+
+    /* চ্যাট লিস্ট */
+    .chat-list { flex: 1; overflow-y: auto; overflow-x: hidden; }
+    .chat-list::-webkit-scrollbar { width: 4px; }
+    .chat-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+    .chat-contact {
+      display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+      cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .chat-contact:hover, .chat-contact.active { background: #202c33; }
+    .contact-info { flex: 1; overflow: hidden; }
+    .contact-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+    .contact-name { font-weight: 600; font-size: 14px; }
+    .contact-time { font-size: 11px; color: var(--wa-text-muted); }
+    .contact-bottom { display: flex; justify-content: space-between; align-items: center; }
+    .contact-preview { font-size: 12.5px; color: var(--wa-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 230px; }
+    .unread-badge { background: var(--wa-green); color: #111b21; border-radius: 12px; padding: 1px 6px; font-size: 10px; font-weight: 700; }
+
+    /* ════════════ কনভারসেশন উইন্ডো ════════════ */
+    .conversation-panel {
+      flex: 1; height: 100%; display: flex; flex-direction: column; background: var(--wa-bg-chat); position: relative;
+    }
+    @media (max-width: 768px) {
+      .sidebar { max-width: 100%; }
+      .conversation-panel { position: absolute; inset: 0; z-index: 20; transform: translateX(100%); transition: transform 0.25s ease; }
+      .conversation-panel.active { transform: translateX(0); }
+    }
+
+    .chat-top-bar {
+      height: 60px; padding: 10px 16px; background: var(--wa-bg-header);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 10;
+    }
+    .chat-user-view { display: flex; align-items: center; gap: 10px; }
+    .btn-chat-back { display: none; background: none; border: none; color: var(--wa-text-main); font-size: 19px; cursor: pointer; }
+    @media (max-width: 768px) { .btn-chat-back { display: block; } }
+
+    /* পিন মেসেজ ব্যানার */
+    .pinned-banner {
+      display: none; align-items: center; justify-content: space-between; padding: 6px 14px;
+      background: rgba(0, 168, 132, 0.15); border-bottom: 1px solid var(--wa-green); font-size: 12px;
+    }
+    .pinned-banner.show { display: flex; }
+
+    /* মেসেজ হিস্ট্রি */
+    .chat-viewport {
+      flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 5%; display: flex; flex-direction: column; gap: 4px;
+      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 20px 20px;
+    }
+    .chat-viewport::-webkit-scrollbar { width: 4px; }
+    .chat-viewport::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); }
+
+    .msg-row { display: flex; margin-bottom: 2px; }
+    .msg-row.own { justify-content: flex-end; }
+    .msg-row.other { justify-content: flex-start; }
+
+    .msg-box {
+      position: relative; max-width: 72%; padding: 6px 9px 7px; border-radius: 8px;
+      font-size: 14px; line-height: 1.45; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .msg-row.own .msg-box { background: var(--wa-green-bubble); color: #fff; border-top-right-radius: 0; }
+    .msg-row.other .msg-box { background: var(--wa-gray-bubble); color: var(--wa-text-main); border-top-left-radius: 0; }
+
+    .msg-box::before { content: ''; position: absolute; top: 0; width: 0; height: 0; border: 7px solid transparent; }
+    .msg-row.own .msg-box::before { right: -7px; border-top-color: var(--wa-green-bubble); border-right: 0; }
+    .msg-row.other .msg-box::before { left: -7px; border-top-color: var(--wa-gray-bubble); border-left: 0; }
+
+    .msg-img { max-width: 260px; max-height: 280px; border-radius: 6px; cursor: zoom-in; display: block; margin-bottom: 4px; }
+
+    .v-player-wa { display: flex; align-items: center; gap: 8px; min-width: 200px; padding: 2px 0; }
+    .v-play-btn {
+      width: 32px; height: 32px; border-radius: 50%; border: none; background: #fff;
+      color: #005c4b; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+    }
+
+    .rx-box { display: flex; gap: 3px; margin-top: 2px; }
+    .msg-row.own .rx-box { justify-content: flex-end; }
+    .rx-pill { background: #1f2c34; border: 1px solid var(--wa-border); border-radius: 10px; padding: 0 4px; font-size: 10px; cursor: pointer; }
+
+    .b-actions {
+      position: absolute; top: -14px; display: none; align-items: center;
+      background: #111b21; border: 1px solid var(--wa-border); border-radius: 8px; padding: 1px 4px; z-index: 5; gap: 2px;
+    }
+    .msg-row.own .b-actions { right: 6px; }
+    .msg-row.other .b-actions { left: 6px; }
+    .msg-box:hover .b-actions { display: flex; }
+    .b-act-btn { background: none; border: none; color: var(--wa-text-muted); padding: 2px 4px; cursor: pointer; font-size: 11px; }
+
+    .meta-tag {
+      float: right; margin-left: 8px; margin-top: 4px; display: flex; align-items: center; gap: 4px;
+      font-size: 10px; color: rgba(255,255,255,0.6);
+    }
+    .tick-blue { color: var(--wa-blue-tick); font-weight: 700; letter-spacing: -2px; }
+
+    /* ইনপুট ফুটার */
+    .chat-footer {
+      min-height: 62px; padding: 8px 12px; background: var(--wa-bg-header);
+      display: flex; align-items: center; gap: 6px; position: relative; z-index: 10;
+    }
+    .footer-pill {
+      flex: 1; background: #2a3942; border-radius: 8px; display: flex; align-items: center;
+      padding: 8px 12px; min-height: 42px; gap: 6px;
+    }
+    .chat-input {
+      width: 100%; max-height: 100px; min-height: 22px; height: 22px; background: transparent;
+      border: none; color: #fff; font-size: 14.5px; font-family: var(--wa-font); resize: none; outline: none;
+    }
+    .btn-send-wa {
+      width: 40px; height: 40px; border-radius: 50%; background: var(--wa-green);
+      border: none; color: #111b21; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px;
+    }
+    .btn-send-wa:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* Popovers */
+    .popover-menu {
+      position: absolute; bottom: 68px; background: #233138; border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6); display: none; z-index: 40; border: 1px solid var(--wa-border);
+    }
+    .popover-menu.show { display: block; }
+    .att-menu { left: 12px; padding: 6px; width: 170px; }
+    .att-btn {
+      width: 100%; display: flex; align-items: center; gap: 8px; padding: 9px 10px;
+      background: none; border: none; color: var(--wa-text-main); font-size: 13px; border-radius: 6px; cursor: pointer; text-align: left;
+    }
+    .att-btn:hover { background: rgba(255,255,255,0.08); }
+
+    .emoji-pop { left: 12px; width: 300px; max-height: 250px; overflow-y: auto; padding: 8px; }
+    .emoji-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .em-btn { background: none; border: none; font-size: 20px; padding: 4px; cursor: pointer; border-radius: 4px; }
+
+    /* ════════════ 🎥 এইচডি অডিও ও ভিডিও কল ════════════ */
+    .call-screen {
+      position: fixed; inset: 0; background: #0c1317; z-index: 30000;
+      display: none; flex-direction: column; justify-content: space-between; padding: 16px 14px 30px;
+    }
+    .call-screen.show { display: flex; }
+    .call-screen.minimized {
+      top: auto; left: auto; bottom: 70px; right: 14px; width: 150px; height: 210px;
+      border-radius: 14px; border: 2px solid var(--wa-green); padding: 4px;
+    }
+    .call-screen.minimized .call-top, .call-screen.minimized .call-ctrl-bar, .call-screen.minimized video#localVideo { display: none !important; }
+
+    .video-box {
+      position: relative; width: 100%; max-width: 480px; flex: 1; border-radius: 14px;
+      overflow: hidden; background: #111b21; margin: 10px auto; display: flex; align-items: center; justify-content: center;
+    }
+    video#remoteVideo { width: 100%; height: 100%; object-fit: cover; }
+    video#localVideo {
+      position: absolute; bottom: 12px; right: 12px; width: 100px; height: 135px;
+      border-radius: 10px; object-fit: cover; border: 2px solid var(--wa-green);
+    }
+    .call-ctrl-bar { display: flex; align-items: center; justify-content: center; gap: 14px; }
+    .call-btn-act {
+      width: 46px; height: 46px; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 17px; color: #fff; background: #2a3942;
+    }
+    .call-btn-act.end { background: #ea0038; }
+
+    /* 📸 ফ্রন্ট ও ব্যাক ক্যামেরা ফ্লিপ মোডাল */
+    .inapp-camera-modal {
+      position: fixed; inset: 0; background: #000; z-index: 40000; display: none;
+      flex-direction: column; justify-content: space-between; padding: 16px;
+    }
+    .inapp-camera-modal.show { display: flex; }
+    video#inappCamVideo { width: 100%; height: 75vh; object-fit: cover; border-radius: 16px; }
+    .cam-action-bar { display: flex; align-items: center; justify-content: space-around; padding: 10px 0; }
+    .cam-btn-shutter { width: 64px; height: 64px; border-radius: 50%; border: 4px solid #fff; background: var(--wa-green); cursor: pointer; }
+
+    /* Modals */
+    .wa-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 35000;
+      display: none; align-items: center; justify-content: center; padding: 16px;
+    }
+    .wa-modal.show { display: flex; }
+    .wa-modal-box { width: 100%; max-width: 320px; background: #202c33; border-radius: 14px; padding: 18px; }
+    .wa-inp-clean { width: 100%; padding: 10px; background: #111b21; border: 1px solid var(--wa-border); border-radius: 8px; color: #fff; margin: 10px 0; outline: none; }
+    .wa-btn-solid { width: 100%; padding: 10px; background: var(--wa-green); color: #111b21; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; }
+
+    canvas#doodleCanvas { background: #111b21; border-radius: 10px; touch-action: none; cursor: crosshair; }
+    .toast-box { position: fixed; top: 14px; right: 14px; z-index: 99999; display: flex; flex-direction: column; gap: 6px; }
+    .toast { padding: 9px 14px; background: #202c33; border-left: 4px solid var(--wa-green); color: #fff; border-radius: 6px; font-size: 12.5px; }
+  </style>
+</head>
+<body>
+  <div id="toastBox" class="toast-box"></div>
+
+  <!-- পিন লক স্ক্রিন -->
+  <div id="pinLockScreen" class="pin-lock-overlay">
+    <div class="wa-avatar" style="width:50px; height:50px; background:var(--wa-green); font-size:20px;">🔒</div>
+    <h3 style="color:#fff;">WhatsApp Locked</h3>
+    <div class="pin-dots">
+      <div class="p-dot"></div><div class="p-dot"></div><div class="p-dot"></div><div class="p-dot"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="p-btn">1</button><button class="p-btn">2</button><button class="p-btn">3</button>
+      <button class="p-btn">4</button><button class="p-btn">5</button><button class="p-btn">6</button>
+      <button class="p-btn">7</button><button class="p-btn">8</button><button class="p-btn">9</button>
+      <button class="p-btn" style="font-size:14px;">✕</button><button class="p-btn">0</button><button class="p-btn" style="font-size:14px;">🔓</button>
+    </div>
+  </div>
+
+  <!-- ফ্রন্ট/ব্যাক ক্যামেরা ফ্লিপ মোডাল -->
+  <div id="inappCameraModal" class="inapp-camera-modal">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <button id="btnCloseCam" class="icon-btn" style="color:#fff; font-size:20px;">✕</button>
+      <span style="color:#fff; font-size:13px;">ক্যামেরা</span>
+      <button id="btnFlipCamera" class="icon-btn" title="ক্যামেরা ফ্লিপ করুন" style="color:#fff; font-size:20px;">🔄</button>
+    </div>
+    <video id="inappCamVideo" autoplay playsinline></video>
+    <div class="cam-action-bar">
+      <div style="width:40px;"></div>
+      <button id="btnShutterPhoto" class="cam-btn-shutter"></button>
+      <div style="width:40px;"></div>
+    </div>
+  </div>
+
+  <!-- এইচডি কলিং স্ক্রিন -->
+  <div id="callScreen" class="call-screen">
+    <div class="call-top" style="text-align:center;">
+      <h3 id="callPeerTitle" style="color:#fff;">ফ্রেন্ড</h3>
+      <div id="callDurationTimer" style="font-size:12px; color:var(--wa-green); margin-top:2px;">00:00</div>
+    </div>
+    <div class="video-box">
+      <video id="remoteVideo" autoplay playsinline></video>
+      <video id="localVideo" autoplay playsinline muted></video>
+    </div>
+    <div class="call-ctrl-bar">
+      <button id="btnMuteMic" class="call-btn-act" title="মাইক অন/অফ">🎤</button>
+      <button id="btnFlipCallCam" class="call-btn-act" title="ক্যামেরা ফ্লিপ">🔄</button>
+      <button id="btnEndCall" class="call-btn-act end" title="কল শেষ">✕</button>
+      <button id="btnShareScreen" class="call-btn-act" title="স্ক্রিন শেয়ার">🖥️</button>
+      <button id="btnMinimizeCall" class="call-btn-act" title="মিনিমাইজ">🗗</button>
+    </div>
+  </div>
+
+  <!-- ইনকামিং কল স্ক্রিন -->
+  <div id="incomingModal" class="wa-modal">
+    <div class="wa-modal-box" style="text-align:center;">
+      <div class="wa-avatar" style="width:60px; height:60px; margin:0 auto 10px; font-size:24px;">👤</div>
+      <h3 id="incCallerName">ফ্রেন্ড</h3>
+      <p style="color:var(--wa-text-muted); font-size:12px; margin-top:3px;">হোয়াটসঅ্যাপ কল আসছে...</p>
+      <div style="display:flex; justify-content:center; gap:30px; margin-top:18px;">
+        <button id="btnDeclineCall" class="call-btn-act end">✕</button>
+        <button id="btnAcceptCall" class="call-btn-act" style="background:var(--wa-green);">📞</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app">
+    <div class="wa-app-wrap">
+
+      <!-- সাইডবার -->
+      <aside class="sidebar" id="sidebarPanel">
+        <header class="sidebar-header">
+          <button class="profile-info-btn" id="btnMyProfile">
+            <div class="wa-avatar" id="myAvatarDisplay">👤<div class="online-badge"></div></div>
+            <div>
+              <h2 id="myNameDisplay" style="font-size:14px; font-weight:600;">আমার নাম</h2>
+              <span style="font-size:11px; color:var(--wa-green);">অনলাইন</span>
+            </div>
+          </button>
+          <div class="header-icons">
+            <button id="btnThemeToggle" class="icon-btn" title="থিম পরিবর্তন">🎨</button>
+            <button id="btnLockApp" class="icon-btn" title="পিন লক">🔒</button>
+            <button id="btnNewChat" class="icon-btn" title="নতুন চ্যাট">💬</button>
+          </div>
+        </header>
+
+        <!-- স্টোরিজ বার -->
+        <div class="stories-container" id="storiesList">
+          <div class="story-item" id="btnUploadStory">
+            <div class="story-ring" style="background:none; border:2px dashed var(--wa-green);">
+              <div class="story-box">+</div>
+            </div>
+            <span style="font-size:10px; color:var(--wa-text-muted);">আমার স্টোরি</span>
+          </div>
+        </div>
+
+        <!-- সার্চ বক্স -->
+        <div class="search-wrap">
+          <div class="search-box">
+            <span style="color:var(--wa-text-muted);">🔍</span>
+            <input id="inpSearch" placeholder="চ্যাট খুঁজুন বা শুরু করুন" />
+          </div>
+        </div>
+
+        <!-- চ্যাট তালিকা -->
+        <div class="chat-list" id="chatListWrap"></div>
+      </aside>
+
+      <!-- কনভারসেশন প্যানেল -->
+      <main class="conversation-panel" id="mainConversation">
+        <header class="chat-top-bar">
+          <div class="chat-user-view">
+            <button id="btnBackSidebar" class="btn-chat-back">←</button>
+            <div class="wa-avatar" id="curPartnerAvatar">👤</div>
+            <div>
+              <h3 id="curPartnerName">চ্যাট নির্বাচন করুন</h3>
+              <span id="curPartnerStatus" style="font-size:11.5px; color:var(--wa-text-muted);">অনলাইন</span>
+            </div>
+          </div>
+          <div class="header-icons">
+            <button id="btnStartVoiceCall" class="icon-btn" title="ভয়েস কল">📞</button>
+            <button id="btnStartVideoCall" class="icon-btn" title="ভিডিও কল">🎥</button>
+            <button id="btnSearchInsideChat" class="icon-btn" title="মেসেজ ফিল্টার">🔍</button>
+            <button id="btnExportChat" class="icon-btn" title="চ্যাট হিস্ট্রি ডাউনলোড">📥</button>
+          </div>
+        </header>
+
+        <!-- পিন করা ব্যানার -->
+        <div id="pinnedMsgBanner" class="pinned-banner">
+          <span id="pinnedMsgTxt">📌 পিন করা মেসেজ...</span>
+          <button id="btnUnpin" style="background:none; border:none; color:var(--wa-green); cursor:pointer;">আনপিন</button>
+        </div>
+
+        <!-- মেসেজ ভিউপোর্ট -->
+        <div class="chat-viewport" id="chatViewport"></div>
+
+        <!-- টাইপিং ইন্ডিকেটর -->
+        <div id="typingIndicator" style="display:none; padding:4px 14px; font-size:11px; color:var(--wa-green); font-style:italic;">
+          টাইপ করছে...
+        </div>
+
+        <!-- ইনপুট ফুটার -->
+        <footer class="chat-footer">
+          <button id="btnEmojiToggle" class="icon-btn" type="button">😀</button>
+          <button id="btnAttachToggle" class="icon-btn" type="button">📎</button>
+
+          <div class="footer-pill">
+            <textarea id="msgInput" class="chat-input" placeholder="একটি বার্তা লিখুন..." rows="1"></textarea>
+            <button id="btnVoiceToText" class="icon-btn" style="font-size:15px; color:var(--wa-green);" title="মুখে বলে লিখুন" type="button">🗣️</button>
+          </div>
+
+          <button id="btnVoiceNote" class="icon-btn" title="ভয়েস নোট" type="button">🎤</button>
+          <button id="btnSendMsg" class="btn-send-wa" type="button" disabled>➤</button>
+        </footer>
+
+        <!-- পপওভার মেনু -->
+        <div id="attachMenu" class="popover-menu att-menu">
+          <button id="actLaunchCam" class="att-btn">📸 ক্যামেরা (Front/Back)</button>
+          <button id="actDoodlePad" class="att-btn">🎨 ফটো ডুডল / ড্রয়িং</button>
+          <button id="actCreatePoll" class="att-btn">📊 পোল ভোটিং</button>
+          <button id="actGallery" class="att-btn">🖼️ গ্যালারি ছবি</button>
+          <button id="actAnyDoc" class="att-btn">📄 যেকোনো ডকুমেন্ট</button>
+        </div>
+
+        <div id="emojiPop" class="popover-menu emoji-pop">
+          <div id="emojiGridBox" class="emoji-grid"></div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- নতুন কন্টাক্ট মোডাল -->
+  <div id="modalNewChat" class="wa-modal">
+    <div class="wa-modal-box">
+      <h3 style="color:#fff;">নতুন চ্যাট শুরু করুন</h3>
+      <input id="inpNewContact" class="wa-inp-clean" placeholder="বন্ধুর নাম বা ইউজারনেম..." />
+      <button id="btnConfirmNewContact" class="wa-btn-solid">চ্যাট তৈরি করুন</button>
+    </div>
+  </div>
+
+  <!-- ডুডল মোডাল -->
+  <div id="modalDoodle" class="wa-modal">
+    <div class="wa-modal-box" style="max-width:300px; text-align:center;">
+      <h4 style="margin-bottom:8px; color:#fff;">🎨 ফটো ডুডল ড্রয়িং</h4>
+      <canvas id="doodleCanvas" width="260" height="230"></canvas>
+      <div style="display:flex; justify-content:space-between; margin-top:10px;">
+        <button id="btnDoodleClear" class="icon-btn" style="border-radius:6px; width:auto; padding:0 8px;">মুছুন</button>
+        <button id="btnDoodleSend" class="wa-btn-solid" style="width:auto; padding:6px 14px;">পাঠান</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- পোল মোডাল -->
+  <div id="modalPoll" class="wa-modal">
+    <div class="wa-modal-box">
+      <h4 style="margin-bottom:8px; color:#fff;">📊 পোল প্রশ্ন লিখুন</h4>
+      <input id="inpPollQuestion" class="wa-inp-clean" placeholder="আপনার প্রশ্ন..." />
+      <input id="inpPollOpt1" class="wa-inp-clean" placeholder="বিকল্প ১..." />
+      <input id="inpPollOpt2" class="wa-inp-clean" placeholder="বিকল্প ২..." />
+      <button id="btnSubmitPoll" class="wa-btn-solid">পোল তৈরি করুন</button>
+    </div>
+  </div>
+
+  <!-- স্টোরি প্রিভিউ মোডাল -->
+  <div id="modalStoryViewer" class="wa-modal">
+    <div class="wa-modal-box" style="text-align:center;">
+      <img id="storyImgPreview" src="" style="width:100%; max-height:300px; border-radius:10px; object-fit:cover;" />
+      <p id="storyUserTitle" style="color:var(--wa-green); margin-top:8px; font-weight:700;">স্টোরি</p>
+    </div>
+  </div>
+
+  <input id="rawGalleryInput" type="file" accept="image/*" style="display:none;" />
+  <input id="rawDocInput" type="file" style="display:none;" />
+  <input id="rawStoryInput" type="file" accept="image/*" style="display:none;" />
+
+  <!-- ════════════ FULL ENGINE JAVASCRIPT ════════════ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, collection, addDoc, doc, updateDoc, setDoc,
+      serverTimestamp, query, orderBy, limit, onSnapshot, getDocs, deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // 🎯 আপনার ফায়ারবেস কনফিগারেশন
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmLJ5Vdd6Pqm-FrPfANvjy1TZkhG1mxns",
+      authDomain: "good-865a2.firebaseapp.com",
+      projectId: "good-865a2",
+      storageBucket: "good-865a2.firebasestorage.app",
+      messagingSenderId: "367706014019",
+      appId: "1:367706014019:web:f4e33a639f4573262baff6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const els = {
+      sidebarPanel: document.getElementById('sidebarPanel'),
+      mainConversation: document.getElementById('mainConversation'),
+      myAvatarDisplay: document.getElementById('myAvatarDisplay'),
+      myNameDisplay: document.getElementById('myNameDisplay'),
+      btnMyProfile: document.getElementById('btnMyProfile'),
+      btnThemeToggle: document.getElementById('btnThemeToggle'),
+      btnLockApp: document.getElementById('btnLockApp'),
+      btnNewChat: document.getElementById('btnNewChat'),
+      chatListWrap: document.getElementById('chatListWrap'),
+      inpSearch: document.getElementById('inpSearch'),
+      btnBackSidebar: document.getElementById('btnBackSidebar'),
+      curPartnerAvatar: document.getElementById('curPartnerAvatar'),
+      curPartnerName: document.getElementById('curPartnerName'),
+      curPartnerStatus: document.getElementById('curPartnerStatus'),
+      chatViewport: document.getElementById('chatViewport'),
+      msgInput: document.getElementById('msgInput'),
+      btnSendMsg: document.getElementById('btnSendMsg'),
+      btnAttachToggle: document.getElementById('btnAttachToggle'),
+      attachMenu: document.getElementById('attachMenu'),
+      btnEmojiToggle: document.getElementById('btnEmojiToggle'),
+      emojiPop: document.getElementById('emojiPop'),
+      emojiGridBox: document.getElementById('emojiGridBox'),
+      btnVoiceNote: document.getElementById('btnVoiceNote'),
+      btnVoiceToText: document.getElementById('btnVoiceToText'),
+      toastBox: document.getElementById('toastBox'),
+      pinnedMsgBanner: document.getElementById('pinnedMsgBanner'),
+      pinnedMsgTxt: document.getElementById('pinnedMsgTxt'),
+      btnUnpin: document.getElementById('btnUnpin'),
+      typingIndicator: document.getElementById('typingIndicator'),
+
+      inappCameraModal: document.getElementById('inappCameraModal'),
+      inappCamVideo: document.getElementById('inappCamVideo'),
+      btnCloseCam: document.getElementById('btnCloseCam'),
+      btnFlipCamera: document.getElementById('btnFlipCamera'),
+      btnShutterPhoto: document.getElementById('btnShutterPhoto'),
+      actLaunchCam: document.getElementById('actLaunchCam'),
+      actDoodlePad: document.getElementById('actDoodlePad'),
+      modalDoodle: document.getElementById('modalDoodle'),
+      doodleCanvas: document.getElementById('doodleCanvas'),
+      btnDoodleClear: document.getElementById('btnDoodleClear'),
+      btnDoodleSend: document.getElementById('btnDoodleSend'),
+      actCreatePoll: document.getElementById('actCreatePoll'),
+      modalPoll: document.getElementById('modalPoll'),
+      inpPollQuestion: document.getElementById('inpPollQuestion'),
+      inpPollOpt1: document.getElementById('inpPollOpt1'),
+      inpPollOpt2: document.getElementById('inpPollOpt2'),
+      btnSubmitPoll: document.getElementById('btnSubmitPoll'),
+      actGallery: document.getElementById('actGallery'),
+      rawGalleryInput: document.getElementById('rawGalleryInput'),
+      actAnyDoc: document.getElementById('actAnyDoc'),
+      rawDocInput: document.getElementById('rawDocInput'),
+      modalNewChat: document.getElementById('modalNewChat'),
+      inpNewContact: document.getElementById('inpNewContact'),
+      btnConfirmNewContact: document.getElementById('btnConfirmNewContact'),
+
+      storiesList: document.getElementById('storiesList'),
+      btnUploadStory: document.getElementById('btnUploadStory'),
+      rawStoryInput: document.getElementById('rawStoryInput'),
+      modalStoryViewer: document.getElementById('modalStoryViewer'),
+      storyImgPreview: document.getElementById('storyImgPreview'),
+      storyUserTitle: document.getElementById('storyUserTitle'),
+
+      btnStartVoiceCall: document.getElementById('btnStartVoiceCall'),
+      btnStartVideoCall: document.getElementById('btnStartVideoCall'),
+      callScreen: document.getElementById('callScreen'),
+      callPeerTitle: document.getElementById('callPeerTitle'),
+      callDurationTimer: document.getElementById('callDurationTimer'),
+      localVideo: document.getElementById('localVideo'),
+      remoteVideo: document.getElementById('remoteVideo'),
+      btnMuteMic: document.getElementById('btnMuteMic'),
+      btnFlipCallCam: document.getElementById('btnFlipCallCam'),
+      btnEndCall: document.getElementById('btnEndCall'),
+      btnShareScreen: document.getElementById('btnShareScreen'),
+      btnMinimizeCall: document.getElementById('btnMinimizeCall'),
+      incomingModal: document.getElementById('incomingModal'),
+      incCallerName: document.getElementById('incCallerName'),
+      btnAcceptCall: document.getElementById('btnAcceptCall'),
+      btnDeclineCall: document.getElementById('btnDeclineCall'),
+
+      pinLockScreen: document.getElementById('pinLockScreen'),
+      btnExportChat: document.getElementById('btnExportChat'),
+      btnSearchInsideChat: document.getElementById('btnSearchInsideChat')
+    };
+
+    let currentUser = null;
+    let activeChatId = 'official_community';
+    let activeChatName = '🌟 অফিসিয়াল গ্লোবাল গ্রুপ';
+    let unsubActiveChat = null;
+    let camFacingMode = 'environment'; // ব্যাক ক্যামেরা ডিফল্ট
+    let inappCamStream = null;
+
+    let peerConn = null;
+    let localStream = null;
+    let activeCallType = 'video';
+    let callTimerId = null;
+    let isMicMuted = false;
+    let isSharing = false;
+
+    const rtcConfig = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
+    const EMOJIS = ["😀","😂","🥰","😍","😎","👍","🙏","❤️","🔥","🎉","✨","🌸","👏","💯","🥺","🥳","🙌","🌹","🤝","⭐","☕","🍔","🍕","⚽"];
+
+    function showToast(msg) {
+      const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+      els.toastBox.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 250); }, 3000);
+    }
+
+    // পিন লক
+    let enteredPin = "";
+    els.btnLockApp.onclick = () => { enteredPin = ""; updateDots(); els.pinLockScreen.classList.add('show'); };
+    document.querySelectorAll('.p-btn').forEach(b => {
+      b.onclick = () => {
+        const val = b.textContent;
+        if (val === '✕') enteredPin = "";
+        else if (val === '🔓') {
+          if (enteredPin === '1234') els.pinLockScreen.classList.remove('show');
+          else { showToast('ভুল পিন! (ডিফল্ট: 1234)'); enteredPin = ""; }
+        } else if (enteredPin.length < 4) {
+          enteredPin += val;
+          if (enteredPin === '1234') setTimeout(() => els.pinLockScreen.classList.remove('show'), 150);
+        }
+        updateDots();
+      };
+    });
+    function updateDots() {
+      document.querySelectorAll('.p-dot').forEach((d, i) => d.classList.toggle('active', i < enteredPin.length));
+    }
+
+    /* ════════════ ১. অটো লগইন ও ইনিশিয়ালাইজেশন ════════════ */
+    async function initWhatsAppEngine() {
+      let myName = localStorage.getItem('wa_my_name') || ('ফ্রেন্ড_' + Math.floor(100 + Math.random() * 900));
+      localStorage.setItem('wa_my_name', myName);
+      els.myNameDisplay.textContent = myName;
+      els.myAvatarDisplay.textContent = myName.charAt(0).toUpperCase();
+
+      try {
+        await signInAnonymously(auth);
+      } catch (e) {
+        currentUser = { uid: localStorage.getItem('wa_my_uid') || 'uid_' + Date.now(), displayName: myName };
+        localStorage.setItem('wa_my_uid', currentUser.uid);
+        setupCoreSystems();
+      }
+    }
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        currentUser = user;
+        currentUser.displayName = localStorage.getItem('wa_my_name') || 'ইউজার';
+        setupCoreSystems();
+      }
+    });
+
+    function setupCoreSystems() {
+      renderChatSidebar();
+      openChatRoom('official_community', '🌟 অফিসিয়াল গ্লোবাল গ্রুপ');
+      listenIncomingCalls();
+      listenStories();
+    }
+
+    els.btnThemeToggle.onclick = () => {
+      if (document.body.classList.contains('theme-pink')) {
+        document.body.classList.remove('theme-pink'); document.body.classList.add('theme-light');
+      } else if (document.body.classList.contains('theme-light')) {
+        document.body.classList.remove('theme-light');
+      } else {
+        document.body.classList.add('theme-pink');
+      }
+    };
+
+    /* ════════════ ২. সাইডবার ও চ্যাট রুমস ════════════ */
+    function renderChatSidebar() {
+      let contacts = JSON.parse(localStorage.getItem('wa_contacts_list') || '[]');
+      let html = `
+        <div class="chat-contact ${activeChatId === 'official_community' ? 'active' : ''}" data-id="official_community" data-name="🌟 অফিসিয়াল গ্লোবাল গ্রুপ">
+          <div class="wa-avatar" style="background:var(--wa-green);">🌟</div>
+          <div class="contact-info">
+            <div class="contact-top"><span class="contact-name">অফিসিয়াল গ্লোবাল গ্রুপ</span><span class="contact-time">সক্রিয়</span></div>
+            <div class="contact-bottom"><span class="contact-preview">সবাই মিলে চ্যাট করুন...</span><span class="unread-badge">গ্রুপ</span></div>
+          </div>
+        </div>
+      `;
+
+      contacts.forEach(c => {
+        const cId = 'chat_' + [currentUser.uid, c.tag].sort().join('_').replace(/[^a-zA-Z0-9_]/g, '');
+        html += `
+          <div class="chat-contact ${activeChatId === cId ? 'active' : ''}" data-id="${cId}" data-name="${c.name}">
+            <div class="wa-avatar">${c.name.charAt(0).toUpperCase()}</div>
+            <div class="contact-info">
+              <div class="contact-top"><span class="contact-name">${c.name}</span><span class="contact-time">প্রাইভেট</span></div>
+              <div class="contact-bottom"><span class="contact-preview">মেসেজ পাঠান...</span></div>
+            </div>
+          </div>
+        `;
+      });
+      els.chatListWrap.innerHTML = html;
+    }
+
+    els.btnNewChat.onclick = () => els.modalNewChat.classList.add('show');
+    els.btnConfirmNewContact.onclick = () => {
+      const tag = els.inpNewContact.value.trim();
+      if (!tag) return;
+      let contacts = JSON.parse(localStorage.getItem('wa_contacts_list') || '[]');
+      if (!contacts.find(c => c.tag === tag)) {
+        contacts.push({ name: tag, tag: tag });
+        localStorage.setItem('wa_contacts_list', JSON.stringify(contacts));
+      }
+      renderChatSidebar();
+      const newId = 'chat_' + [currentUser.uid, tag].sort().join('_').replace(/[^a-zA-Z0-9_]/g, '');
+      openChatRoom(newId, tag);
+      els.modalNewChat.classList.remove('show');
+      els.inpNewContact.value = '';
+    };
+
+    els.chatListWrap.onclick = e => {
+      const row = e.target.closest('.chat-contact');
+      if (row) {
+        document.querySelectorAll('.chat-contact').forEach(r => r.classList.remove('active'));
+        row.classList.add('active');
+        openChatRoom(row.dataset.id, row.dataset.name);
+      }
+    };
+
+    function openChatRoom(cId, cName) {
+      activeChatId = cId; activeChatName = cName;
+      els.curPartnerName.textContent = cName;
+      els.curPartnerAvatar.textContent = cName.charAt(0).toUpperCase();
+      els.mainConversation.classList.add('active');
+      loadMessagesForRoom();
+    }
+    els.btnBackSidebar.onclick = () => els.mainConversation.classList.remove('active');
+
+    /* ════════════ ৩. রিয়েলটাইম ইনক্রিমেন্টাল মেসেজিং ════════════ */
+    function loadMessagesForRoom() {
+      if (unsubActiveChat) unsubActiveChat();
+      els.chatViewport.innerHTML = '<div style="text-align:center; padding:10px; font-size:11.5px; color:var(--wa-text-muted);">🔒 এন্ড-টু-এন্ড এনক্রিপ্টেড মেসেজ</div>';
+
+      const q = query(collection(db, 'chats', activeChatId, 'messages'), orderBy('createdAt', 'asc'), limit(60));
+      unsubActiveChat = onSnapshot(q, snap => {
+        snap.docChanges().forEach(change => {
+          const m = { id: change.doc.id, ...change.doc.data() };
+          if (change.type === 'added') appendMessage(m);
+        });
+        els.chatViewport.scrollTop = els.chatViewport.scrollHeight;
+      }, err => {
+        showToast('ডাটাবেস রুলস পারমিশন চেক করুন');
+      });
+    }
+
+    function parseMarkdown(s) {
+      let t = String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      t = t.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+      t = t.replace(/_(.*?)_/g, '<em>$1</em>');
+      t = t.replace(/~(.*?)~/g, '<del>$1</del>');
+      t = t.replace(/`(.*?)`/g, '<code style="background:#2a3942; padding:1px 4px; border-radius:4px;">$1</code>');
+      return t;
+    }
+
+    function appendMessage(m) {
+      if (document.getElementById(`msg-${m.id}`)) return;
+      const isOwn = currentUser && m.senderId === currentUser.uid;
+      const row = document.createElement('div');
+      row.className = `msg-row ${isOwn ? 'own' : 'other'}`;
+      row.id = `msg-${m.id}`;
+
+      let media = '';
+      if (m.type === 'image') {
+        media = `<img src="${m.mediaUrl}" class="msg-img" loading="lazy" />`;
+      } else if (m.type === 'voice') {
+        media = `
+          <div class="v-player-wa" data-u="${m.mediaUrl}">
+            <button class="v-play-btn" type="button">▶</button>
+            <span style="font-size:11px;">ভয়েস (${m.duration||0}s)</span>
+          </div>`;
+      } else if (m.type === 'poll') {
+        let opts = '';
+        (m.options || []).forEach((opt, idx) => {
+          opts += `<button class="wa-btn-solid" style="margin-top:4px; font-size:12px; padding:6px;" data-idx="${idx}">${opt}</button>`;
+        });
+        media = `<div style="min-width:180px;"><strong>📊 ${m.text}</strong>${opts}</div>`;
+      }
+
+      const textHtml = m.text && m.type !== 'poll' ? `<div>${parseMarkdown(m.text)}</div>` : '';
+      const tick = isOwn ? `<span class="tick-blue">✓✓</span>` : '';
+
+      row.innerHTML = `
+        <div class="msg-box">
+          <div class="b-actions">
+            <button class="b-act-btn" data-act="pin">📌</button>
+            <button class="b-act-btn" data-act="star">⭐</button>
+            ${isOwn ? '<button class="b-act-btn" data-act="del">🗑️</button>' : ''}
+          </div>
+          ${media}
+          ${textHtml}
+          <div class="meta-tag"><span>এখন</span>${tick}</div>
+        </div>
+      `;
+      els.chatViewport.appendChild(row);
+    }
+
+    async function sendMsg(text = '', type = 'text', mediaUrl = null, extra = {}) {
+      if (!currentUser) return;
+      try {
+        await addDoc(collection(db, 'chats', activeChatId, 'messages'), {
+          text, type, mediaUrl,
+          senderId: currentUser.uid,
+          senderName: currentUser.displayName || 'ফ্রেন্ড',
+          createdAt: serverTimestamp(),
+          ...extra
+        });
+      } catch (e) { showToast('মেসেজ যায়নি'); }
+    }
+
+    els.btnSendMsg.onclick = () => {
+      const t = els.msgInput.value.trim();
+      if (!t) return;
+      sendMsg(t, 'text');
+      els.msgInput.value = ''; els.msgInput.style.height = '22px'; els.btnSendMsg.disabled = true;
+    };
+    els.msgInput.oninput = () => {
+      els.msgInput.style.height = 'auto';
+      els.msgInput.style.height = Math.min(els.msgInput.scrollHeight, 100) + 'px';
+      els.btnSendMsg.disabled = !els.msgInput.value.trim();
+    };
+
+    /* ════════════ ৪. ফ্রন্ট ও ব্যাক ক্যামেরা ফ্লিপিং ════════════ */
+    els.actLaunchCam.onclick = () => {
+      els.attachMenu.classList.remove('show');
+      startInAppCamera();
+    };
+    els.btnCloseCam.onclick = () => stopInAppCamera();
+
+    async function startInAppCamera() {
+      if (inappCamStream) inappCamStream.getTracks().forEach(t => t.stop());
+      try {
+        inappCamStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: camFacingMode, width: { ideal: 1280 } }
+        });
+        els.inappCamVideo.srcObject = inappCamStream;
+        els.inappCameraModal.classList.add('show');
+      } catch (e) {
+        showToast('ক্যামেরা অন করা যায়নি');
+      }
+    }
+
+    function stopInAppCamera() {
+      if (inappCamStream) inappCamStream.getTracks().forEach(t => t.stop());
+      els.inappCameraModal.classList.remove('show');
+    }
+
+    els.btnFlipCamera.onclick = () => {
+      camFacingMode = (camFacingMode === 'environment') ? 'user' : 'environment';
+      showToast(camFacingMode === 'environment' ? '📷 ব্যাক ক্যামেরা' : '🤳 ফ্রন্ট ক্যামেরা');
+      startInAppCamera();
+    };
+
+    els.btnShutterPhoto.onclick = () => {
+      const cvs = document.createElement('canvas');
+      cvs.width = els.inappCamVideo.videoWidth; cvs.height = els.inappCamVideo.videoHeight;
+      cvs.getContext('2d').drawImage(els.inappCamVideo, 0, 0);
+      const b64 = cvs.toDataURL('image/jpeg', 0.5);
+      sendMsg('', 'image', b64);
+      stopInAppCamera();
+      showToast('ছবি পাঠানো হয়েছে!');
+    };
+
+    /* ════════════ ৫. এইচডি অডিও ও ভিডিও কলিং ════════════ */
+    els.btnStartVoiceCall.onclick = () => startCallSession('audio');
+    els.btnStartVideoCall.onclick = () => startCallSession('video');
+
+    async function startCallSession(type) {
+      activeCallType = type;
+      showToast(type === 'video' ? '🎥 ভিডিও কল শুরু হচ্ছে...' : '📞 অডিও কল শুরু হচ্ছে...');
+
+      const ready = await setupCallStream(type);
+      if (!ready) return;
+
+      setupCallInterface(type, activeChatName);
+
+      peerConn = new RTCPeerConnection(rtcConfig);
+      bindTracks();
+
+      localStream.getTracks().forEach(t => peerConn.addTrack(t, localStream));
+
+      peerConn.onicecandidate = e => {
+        if (e.candidate) addDoc(collection(db, 'calls', activeChatId, 'callerCandidates'), e.candidate.toJSON());
+      };
+
+      const offer = await peerConn.createOffer();
+      await peerConn.setLocalDescription(offer);
+
+      const callDoc = doc(db, 'calls', activeChatId);
+      await setDoc(callDoc, {
+        callerId: currentUser.uid, callerName: currentUser.displayName || 'ফ্রেন্ড',
+        type: type, status: 'calling', offer: { type: offer.type, sdp: offer.sdp }, createdAt: Date.now()
+      });
+
+      const unsub = onSnapshot(callDoc, async snap => {
+        const d = snap.data();
+        if (d && d.status === 'connected' && d.answer && !peerConn.currentRemoteDescription) {
+          await peerConn.setRemoteDescription(new RTCSessionDescription(d.answer));
+          startCallTimer();
+        } else if (d && d.status === 'ended') {
+          endCallSession(false);
+          unsub();
+        }
+      });
+
+      onSnapshot(collection(db, 'calls', activeChatId, 'calleeCandidates'), s => {
+        s.docChanges().forEach(c => {
+          if (c.type === 'added') peerConn.addIceCandidate(new RTCIceCandidate(c.doc.data()));
+        });
+      });
+    }
+
+    function listenIncomingCalls() {
+      onSnapshot(doc(db, 'calls', activeChatId), snap => {
+        const d = snap.data();
+        if (d && d.status === 'calling' && d.callerId !== currentUser?.uid) {
+          if (Date.now() - d.createdAt > 45000) return;
+          els.incCallerName.textContent = d.callerName;
+          els.incomingModal.classList.add('show');
+          els.btnAcceptCall.onclick = () => acceptIncoming(d);
+          els.btnDeclineCall.onclick = () => rejectIncoming();
+        } else if (d && d.status === 'ended') {
+          els.incomingModal.classList.remove('show');
+        }
+      });
+    }
+
+    async function acceptIncoming(d) {
+      els.incomingModal.classList.remove('show');
+      activeCallType = d.type;
+      const ready = await setupCallStream(d.type);
+      if (!ready) return;
+
+      setupCallInterface(d.type, d.callerName);
+
+      peerConn = new RTCPeerConnection(rtcConfig);
+      bindTracks();
+
+      localStream.getTracks().forEach(t => peerConn.addTrack(t, localStream));
+
+      peerConn.onicecandidate = e => {
+        if (e.candidate) addDoc(collection(db, 'calls', activeChatId, 'calleeCandidates'), e.candidate.toJSON());
+      };
+
+      await peerConn.setRemoteDescription(new RTCSessionDescription(d.offer));
+      const answer = await peerConn.createAnswer();
+      await peerConn.setLocalDescription(answer);
+
+      await updateDoc(doc(db, 'calls', activeChatId), {
+        answer: { type: answer.type, sdp: answer.sdp },
+        status: 'connected'
+      });
+
+      onSnapshot(collection(db, 'calls', activeChatId, 'callerCandidates'), s => {
+        s.docChanges().forEach(c => {
+          if (c.type === 'added') peerConn.addIceCandidate(new RTCIceCandidate(c.doc.data()));
+        });
+      });
+
+      startCallTimer();
+    }
+
+    async function rejectIncoming() {
+      els.incomingModal.classList.remove('show');
+      try { await updateDoc(doc(db, 'calls', activeChatId), { status: 'ended' }); } catch (e) {}
+    }
+
+    async function setupCallStream(type) {
+      try {
+        const constraints = {
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
+          video: type === 'video' ? { facingMode: 'user', width: { ideal: 1280 } } : false
+        };
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        els.localVideo.srcObject = localStream;
+        els.localVideo.muted = true;
+        return true;
+      } catch (e) {
+        showToast('মাইক বা ক্যামেরা অন করা যায়নি');
+        return false;
+      }
+    }
+
+    function bindTracks() {
+      peerConn.ontrack = e => {
+        if (e.streams && e.streams[0]) {
+          els.remoteVideo.srcObject = e.streams[0];
+          els.remoteVideo.muted = false;
+        }
+      };
+    }
+
+    function setupCallInterface(type, name) {
+      els.callScreen.classList.remove('minimized');
+      els.callScreen.classList.add('show');
+      els.callPeerTitle.textContent = name;
+      els.localVideo.style.display = type === 'video' ? 'block' : 'none';
+      els.remoteVideo.style.display = type === 'video' ? 'block' : 'none';
+    }
+
+    function startCallTimer() {
+      const sTime = Date.now();
+      callTimerId = setInterval(() => {
+        const s = Math.floor((Date.now() - sTime) / 1000);
+        const m = Math.floor(s / 60);
+        els.callDurationTimer.textContent = `${m < 10 ? '0' : ''}${m}:${(s % 60 < 10 ? '0' : '') + (s % 60)}`;
+      }, 1000);
+    }
+
+    els.btnEndCall.onclick = () => endCallSession(true);
+
+    async function endCallSession(notify = true) {
+      if (callTimerId) clearInterval(callTimerId);
+      if (localStream) localStream.getTracks().forEach(t => t.stop());
+      if (peerConn) { peerConn.close(); peerConn = null; }
+      els.callScreen.classList.remove('show', 'minimized');
+      showToast('কল সমাপ্ত হয়েছে');
+      if (notify) {
+        try { await updateDoc(doc(db, 'calls', activeChatId), { status: 'ended' }); } catch (e) {}
+      }
+    }
+
+    els.btnMinimizeCall.onclick = () => els.callScreen.classList.toggle('minimized');
+
+    els.btnShareScreen.onclick = async () => {
+      if (!peerConn) return;
+      try {
+        if (!isSharing) {
+          const scr = await navigator.mediaDevices.getDisplayMedia({ video: true });
+          const track = scr.getVideoTracks()[0];
+          const sender = peerConn.getSenders().find(s => s.track.kind === 'video');
+          if (sender) sender.replaceTrack(track);
+          els.localVideo.srcObject = scr;
+          isSharing = true;
+          track.onended = () => {
+            sender.replaceTrack(localStream.getVideoTracks()[0]);
+            els.localVideo.srcObject = localStream;
+            isSharing = false;
+          };
+        }
+      } catch (e) {}
+    };
+
+    els.btnFlipCallCam.onclick = async () => {
+      if (!localStream || activeCallType === 'audio') return;
+      camFacingMode = (camFacingMode === 'user') ? 'environment' : 'user';
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: camFacingMode, width: { ideal: 1280 } }
+        });
+        const newTrack = newStream.getVideoTracks()[0];
+        const sender = peerConn.getSenders().find(s => s.track.kind === 'video');
+        if (sender) sender.replaceTrack(newTrack);
+        localStream.getVideoTracks()[0].stop();
+        localStream.removeTrack(localStream.getVideoTracks()[0]);
+        localStream.addTrack(newTrack);
+        els.localVideo.srcObject = localStream;
+      } catch (e) {}
+    };
+
+    /* ════════════ ৬. স্টোরিজ বার ════════════ */
+    function listenStories() {
+      const q = query(collection(db, 'stories'), limit(15));
+      onSnapshot(q, snap => {
+        let html = `
+          <div class="story-item" id="btnUploadStory">
+            <div class="story-ring" style="background:none; border:2px dashed var(--wa-green);"><div class="story-box">+</div></div>
+            <span style="font-size:10px; color:var(--wa-text-muted);">আমার স্টোরি</span>
+          </div>
+        `;
+        snap.docs.forEach(d => {
+          const s = d.data();
+          html += `
+            <div class="story-item" data-url="${s.url}" data-name="${s.name}">
+              <div class="story-ring"><div class="story-box">${s.name.charAt(0).toUpperCase()}</div></div>
+              <span style="font-size:10px; color:var(--wa-text-muted);">${s.name}</span>
+            </div>
+          `;
+        });
+        els.storiesList.innerHTML = html;
+        document.getElementById('btnUploadStory').onclick = () => els.rawStoryInput.click();
+      });
+    }
+
+    els.storiesList.onclick = e => {
+      const itm = e.target.closest('.story-item');
+      if (itm && itm.dataset.url) {
+        els.storyImgPreview.src = itm.dataset.url;
+        els.storyUserTitle.textContent = itm.dataset.name + '-এর স্টোরি';
+        els.modalStoryViewer.classList.add('show');
+      }
+    };
+    els.modalStoryViewer.onclick = () => els.modalStoryViewer.classList.remove('show');
+
+    els.rawStoryInput.onchange = async e => {
+      const f = e.target.files[0];
+      if (f) {
+        showToast('স্টোরি আপলোড হচ্ছে...');
+        const b64 = await compressPhoto(f);
+        await addDoc(collection(db, 'stories'), { url: b64, name: currentUser.displayName, createdAt: Date.now() });
+        showToast('স্টোরি পোস্ট হয়েছে!');
+      }
+    };
+
+    /* ════════════ ৭. ডুডল, পোল, ভয়েস-টু-টেক্সট ════════════ */
+    els.btnVoiceToText.onclick = () => {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return showToast('স্পিচ ব্রাউজারে নেই');
+      const rec = new SR(); rec.lang = 'bn-BD';
+      showToast('🌸 বলুন, শুনছি...');
+      rec.onresult = ev => {
+        els.msgInput.value += ev.results[0][0].transcript;
+        els.btnSendMsg.disabled = false;
+      };
+      rec.start();
+    };
+
+    const dCvs = els.doodleCanvas, dCtx = dCvs.getContext('2d');
+    let isDrawing = false;
+    dCtx.strokeStyle = '#00a884'; dCtx.lineWidth = 3;
+    els.actDoodlePad.onclick = () => { els.attachMenu.classList.remove('show'); els.modalDoodle.classList.add('show'); };
+    els.btnDoodleClear.onclick = () => dCtx.clearRect(0,0,dCvs.width,dCvs.height);
+    els.btnDoodleSend.onclick = () => {
+      sendMsg('', 'image', dCvs.toDataURL('image/png'));
+      els.btnDoodleClear.click(); els.modalDoodle.classList.remove('show');
+    };
+    function getP(e) {
+      const r = dCvs.getBoundingClientRect(), ev = e.touches ? e.touches[0] : e;
+      return [ev.clientX - r.left, ev.clientY - r.top];
+    }
+    dCvs.onmousedown = dCvs.ontouchstart = e => { isDrawing = true; dCtx.beginPath(); dCtx.moveTo(...getP(e)); };
+    dCvs.onmousemove = dCvs.ontouchmove = e => { if (isDrawing) { dCtx.lineTo(...getP(e)); dCtx.stroke(); } };
+    window.onmouseup = window.ontouchend = () => isDrawing = false;
+
+    els.actCreatePoll.onclick = () => { els.attachMenu.classList.remove('show'); els.modalPoll.classList.add('show'); };
+    els.btnSubmitPoll.onclick = () => {
+      const q = els.inpPollQuestion.value.trim(), o1 = els.inpPollOpt1.value.trim(), o2 = els.inpPollOpt2.value.trim();
+      if (!q || !o1 || !o2) return;
+      sendMsg(q, 'poll', null, { options: [o1, o2] });
+      els.inpPollQuestion.value = ''; els.inpPollOpt1.value = ''; els.inpPollOpt2.value = '';
+      els.modalPoll.classList.remove('show');
+    };
+
+    els.actGallery.onclick = () => { els.attachMenu.classList.remove('show'); els.rawGalleryInput.click(); };
+    els.rawGalleryInput.onchange = async e => {
+      const f = e.target.files[0];
+      if (f) {
+        showToast('ছবি পাঠানো হচ্ছে...');
+        const b64 = await compressPhoto(f);
+        sendMsg('', 'image', b64);
+      }
+    };
+    function compressPhoto(file) {
+      return new Promise(res => {
+        const r = new FileReader(); r.readAsDataURL(file);
+        r.onload = ev => {
+          const img = new Image();
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            let w = img.width, h = img.height, max = 500;
+            if (w > h && w > max) { h = Math.round((h * max) / w); w = max; }
+            else if (h > max) { w = Math.round((w * max) / h); h = max; }
+            c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            res(c.toDataURL('image/jpeg', 0.5));
+          };
+          img.src = ev.target.result;
+        };
+      });
+    }
+
+    els.btnEmojiToggle.onclick = e => {
+      e.stopPropagation();
+      els.emojiPop.classList.toggle('show');
+    };
+    els.emojiGridBox.innerHTML = EMOJIS.map(em => `<button class="em-btn">${em}</button>`).join('');
+    els.emojiGridBox.onclick = e => {
+      if (e.target.classList.contains('em-btn')) {
+        els.msgInput.value += e.target.textContent;
+        els.btnSendMsg.disabled = false;
+      }
+    };
+
+    els.chatViewport.onclick = async e => {
+      const v = e.target.closest('.v-play-btn');
+      if (v) {
+        const audio = new Audio(v.closest('.v-player-wa').dataset.u);
+        v.textContent = '⏸'; audio.play();
+        audio.onended = () => v.textContent = '▶';
+        return;
+      }
+      const act = e.target.closest('.b-act-btn');
+      if (act) {
+        const row = act.closest('.msg-row');
+        const id = row.id.replace('msg-', '');
+        const a = act.dataset.act;
+        if (a === 'del') {
+          await updateDoc(doc(db, 'chats', activeChatId, 'messages', id), { text: 'মেসেজ মুছে ফেলা হয়েছে 🚫', type: 'text', mediaUrl: null });
+        } else if (a === 'pin') {
+          els.pinnedMsgTxt.textContent = row.querySelector('.msg-box').innerText;
+          els.pinnedMsgBanner.classList.add('show');
+          showToast('মেসেজ পিন করা হয়েছে 📌');
+        } else if (a === 'star') {
+          showToast('মেসেজ ফেভারিটে সেভ হয়েছে ⭐');
+        }
+      }
+    };
+    els.btnUnpin.onclick = () => els.pinnedMsgBanner.classList.remove('show');
+
+    els.btnAttachToggle.onclick = e => { e.stopPropagation(); els.attachMenu.classList.toggle('show'); };
+    document.onclick = () => { els.attachMenu.classList.remove('show'); els.emojiPop.classList.remove('show'); };
+
+    initWhatsAppEngine();
+  </script>
+</body>
+</html>
