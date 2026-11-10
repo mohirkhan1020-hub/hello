@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>WhatsApp Web — প্রোডাকশন চ্যাট ও কল</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --wa-bg-deep: #0c1317;
+      --wa-bg-panel: #111b21;
+      --wa-bg-header: #202c33;
+      --wa-bg-chat: #0b141a;
+      --wa-border: #222d34;
+      --wa-green: #00a884;
+      --wa-green-bubble: #005c4b;
+      --wa-gray-bubble: #202c33;
+      --wa-text-main: #e9edef;
+      --wa-text-muted: #8696a0;
+      --wa-blue-tick: #53bdeb;
+      --font-wa: 'Segoe UI', 'Inter', -apple-system, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--wa-bg-deep); color: var(--wa-text-main); font-family: var(--font-wa); font-size: 14.5px; }
+
+    #app { width: 100%; height: 100dvh; display: flex; align-items: center; justify-content: center; }
+
+    /* WHATSAPP MAIN CONTAINER */
+    .wa-container {
+      width: 100%; height: 100%; max-width: 1600px; display: flex;
+      background: var(--wa-bg-panel); overflow: hidden; position: relative;
+    }
+
+    /* ════════════ ১. সাইডবার (চ্যাট লিস্ট) ════════════ */
+    .sidebar {
+      width: 100%; max-width: 420px; height: 100%; display: flex; flex-direction: column;
+      background: var(--wa-bg-panel); border-right: 1px solid var(--wa-border); z-index: 10;
+      transition: transform 0.25s ease;
+    }
+    .sidebar-header {
+      height: 60px; padding: 10px 16px; background: var(--wa-bg-header);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .my-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .wa-avatar {
+      width: 40px; height: 40px; border-radius: 50%; background: #6a7175;
+      display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; color: #fff;
+      flex-shrink: 0; position: relative;
+    }
+    .status-online-dot {
+      position: absolute; bottom: 0; right: 0; width: 11px; height: 11px;
+      background: var(--wa-green); border-radius: 50%; border: 2px solid var(--wa-bg-header);
+    }
+    .my-name-box h2 { font-size: 14.5px; font-weight: 600; color: var(--wa-text-main); }
+    .my-name-box span { font-size: 11.5px; color: var(--wa-text-muted); }
+
+    .header-tools { display: flex; align-items: center; gap: 8px; }
+    .tool-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: none; background: transparent;
+      color: var(--wa-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 17px; transition: 0.15s;
+    }
+    .tool-btn:hover { background: rgba(255,255,255,0.08); color: var(--wa-text-main); }
+
+    /* সার্চ বার */
+    .search-box-wrap { padding: 8px 12px; border-bottom: 1px solid var(--wa-border); background: var(--wa-bg-panel); }
+    .search-inner {
+      background: var(--wa-bg-header); border-radius: 8px; display: flex; align-items: center;
+      padding: 0 12px; gap: 10px; height: 36px;
+    }
+    .search-inner input {
+      width: 100%; background: transparent; border: none; outline: none; color: #fff; font-size: 13.5px;
+    }
+    .search-inner input::placeholder { color: var(--wa-text-muted); }
+
+    /* চ্যাট লিস্ট স্ক্রোল */
+    .chat-list-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; }
+    .chat-list-scroll::-webkit-scrollbar { width: 5px; }
+    .chat-list-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+
+    .chat-item {
+      display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+      cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s;
+    }
+    .chat-item:hover, .chat-item.active { background: #202c33; }
+    .chat-item-info { flex: 1; overflow: hidden; }
+    .chat-item-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+    .chat-item-name { font-weight: 600; font-size: 14.5px; color: var(--wa-text-main); }
+    .chat-item-time { font-size: 11px; color: var(--wa-text-muted); }
+    .chat-item-bottom { display: flex; justify-content: space-between; align-items: center; }
+    .chat-item-msg { font-size: 13px; color: var(--wa-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+    .unread-pill {
+      background: var(--wa-green); color: #111b21; border-radius: 12px;
+      padding: 2px 6px; font-size: 10.5px; font-weight: 700; min-width: 18px; text-align: center;
+    }
+
+    /* ════════════ ২. মেইন চ্যাট উইন্ডো (কনভারসেশন) ════════════ */
+    .main-chat {
+      flex: 1; height: 100%; display: flex; flex-direction: column;
+      background: var(--wa-bg-chat); position: relative;
+    }
+
+    /* মোবাইল স্লাইড লজিক */
+    @media (max-width: 768px) {
+      .sidebar { max-width: 100%; }
+      .main-chat {
+        position: absolute; inset: 0; z-index: 20; transform: translateX(100%);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .main-chat.active { transform: translateX(0); }
+    }
+
+    .main-chat-header {
+      height: 60px; padding: 10px 16px; background: var(--wa-bg-header);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 10;
+    }
+    .chat-header-user { display: flex; align-items: center; gap: 10px; }
+    .btn-back { display: none; background: none; border: none; color: var(--wa-text-main); font-size: 20px; cursor: pointer; padding-right: 4px; }
+    @media (max-width: 768px) { .btn-back { display: block; } }
+
+    .chat-header-meta h3 { font-size: 15px; font-weight: 600; color: #fff; }
+    .chat-header-meta span { font-size: 11.5px; color: var(--wa-text-muted); }
+
+    .chat-actions { display: flex; align-items: center; gap: 12px; }
+    .call-btn { color: var(--wa-text-muted); }
+    .call-btn:hover { color: var(--wa-green); }
+
+    /* মেসেজ এরিয়া ও হোয়াটসঅ্যাপ অফিসিয়াল প্যাটার্ন */
+    .messages-viewport {
+      flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 5%;
+      display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth;
+      background-color: #0b141a;
+      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .messages-viewport::-webkit-scrollbar { width: 5px; }
+    .messages-viewport::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); }
+
+    .date-separator {
+      align-self: center; margin: 10px 0; background: var(--wa-bg-header);
+      padding: 5px 12px; border-radius: 7px; font-size: 11.5px; color: var(--wa-text-muted); box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    /* মেসেজ বাবলস ও টেইলস */
+    .msg-row { display: flex; margin-bottom: 2px; }
+    .msg-row.own { justify-content: flex-end; }
+    .msg-row.other { justify-content: flex-start; }
+
+    .msg-bubble {
+      position: relative; max-width: 70%; padding: 6px 9px 8px; border-radius: 8px;
+      font-size: 14px; line-height: 1.45; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+    .msg-row.own .msg-bubble { background: var(--wa-green-bubble); color: #fff; border-top-right-radius: 0; }
+    .msg-row.other .msg-bubble { background: var(--wa-gray-bubble); color: var(--wa-text-main); border-top-left-radius: 0; }
+
+    /* হোয়াটসঅ্যাপ বাবল টেইল */
+    .msg-row.own .msg-bubble::before {
+      content: ''; position: absolute; top: 0; right: -8px; width: 0; height: 0;
+      border: 8px solid transparent; border-top-color: var(--wa-green-bubble); border-right: 0;
+    }
+    .msg-row.other .msg-bubble::before {
+      content: ''; position: absolute; top: 0; left: -8px; width: 0; height: 0;
+      border: 8px solid transparent; border-top-color: var(--wa-gray-bubble); border-left: 0;
+    }
+
+    .msg-media-img { max-width: 280px; max-height: 320px; border-radius: 6px; cursor: zoom-in; display: block; margin-bottom: 4px; }
+    .msg-voice-wrap { display: flex; align-items: center; gap: 8px; min-width: 200px; padding: 4px 0; }
+    .v-play-btn {
+      width: 32px; height: 32px; border-radius: 50%; border: none; background: #fff;
+      color: #005c4b; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 14px;
+    }
+
+    .bubble-meta {
+      float: right; margin-left: 10px; margin-top: 4px; display: flex; align-items: center; gap: 4px;
+      font-size: 10.5px; color: rgba(255,255,255,0.55);
+    }
+    .blue-tick { color: var(--wa-blue-tick); font-weight: 700; letter-spacing: -2px; }
+
+    /* FOOTER INPUT BAR */
+    .chat-footer {
+      min-height: 62px; padding: 8px 14px; background: var(--wa-bg-header);
+      display: flex; align-items: center; gap: 8px; position: relative; z-index: 10;
+    }
+    .footer-btn {
+      width: 40px; height: 40px; border-radius: 50%; border: none; background: transparent;
+      color: var(--wa-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; transition: color 0.15s; flex-shrink: 0;
+    }
+    .footer-btn:hover { color: var(--wa-text-main); }
+    .footer-btn.btn-send-green {
+      background: var(--wa-green); color: #111b21; border-radius: 50%;
+    }
+    .footer-btn.btn-send-green:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .input-pill {
+      flex: 1; background: #2a3942; border-radius: 8px; display: flex; align-items: center;
+      padding: 9px 14px; min-height: 42px;
+    }
+    .chat-textarea {
+      width: 100%; max-height: 100px; min-height: 22px; height: 22px; background: transparent;
+      border: none; color: #fff; font-size: 14.5px; font-family: var(--font-wa); resize: none; outline: none;
+    }
+
+    /* Popovers */
+    .wa-popover {
+      position: absolute; bottom: 68px; background: #233138; border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6); display: none; z-index: 40; border: 1px solid var(--wa-border);
+    }
+    .wa-popover.show { display: block; }
+    .attach-grid { left: 14px; padding: 8px; width: 170px; }
+    .att-item-btn {
+      width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      background: none; border: none; color: var(--wa-text-main); font-size: 13.5px; border-radius: 8px; cursor: pointer;
+    }
+    .att-item-btn:hover { background: rgba(255,255,255,0.08); }
+
+    .emoji-picker-wa { left: 14px; width: 310px; max-height: 250px; overflow-y: auto; padding: 10px; }
+    .emoji-grid-wa { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .em-item { background: none; border: none; font-size: 22px; padding: 4px; cursor: pointer; border-radius: 6px; }
+
+    /* ════════════ ৩. আল্ট্রা এইচডি কলিং স্ক্রিন (NO ECHO) ════════════ */
+    .call-window {
+      position: fixed; inset: 0; background: #0c1317; z-index: 20000;
+      display: none; flex-direction: column; justify-content: space-between; padding: 20px 16px 34px;
+    }
+    .call-window.show { display: flex; }
+    .call-top-bar { text-align: center; }
+    .call-contact-title { font-size: 18px; font-weight: 600; color: #fff; }
+    .call-quality-badge { font-size: 11px; color: var(--wa-green); margin-top: 4px; }
+
+    .call-video-stage {
+      position: relative; width: 100%; max-width: 480px; flex: 1; border-radius: 16px;
+      overflow: hidden; background: #111b21; margin: 16px auto; display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--wa-border);
+    }
+    video#remoteVideo { width: 100%; height: 100%; object-fit: cover; }
+    video#localVideo {
+      position: absolute; bottom: 14px; right: 14px; width: 110px; height: 150px;
+      border-radius: 12px; object-fit: cover; border: 2px solid var(--wa-green); box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    }
+    .call-ctrl-row { display: flex; align-items: center; justify-content: center; gap: 18px; }
+    .ctrl-round {
+      width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff;
+    }
+    .ctrl-round.end { background: #ea0038; }
+    .ctrl-round.toggle { background: #2a3942; }
+
+    /* ইনকামিং কল */
+    .incoming-dialog {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 25000;
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .incoming-dialog.show { display: flex; }
+    .inc-box {
+      width: 100%; max-width: 320px; background: #202c33; border-radius: 20px;
+      padding: 24px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    }
+    .inc-btns { display: flex; justify-content: center; gap: 30px; margin-top: 20px; }
+    .inc-btn { width: 54px; height: 54px; border-radius: 50%; border: none; font-size: 22px; color: #fff; cursor: pointer; }
+    .inc-btn.accept { background: var(--wa-green); }
+    .inc-btn.decline { background: #ea0038; }
+
+    /* NEW CHAT MODAL */
+    .wa-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000;
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .wa-modal.show { display: flex; }
+    .wa-modal-card {
+      width: 100%; max-width: 360px; background: #202c33; border-radius: 16px; padding: 20px;
+    }
+    .wa-input {
+      width: 100%; padding: 11px 12px; background: #111b21; border: 1px solid var(--wa-border);
+      border-radius: 8px; color: #fff; font-size: 14px; margin: 12px 0 16px; outline: none;
+    }
+    .wa-btn-full {
+      width: 100%; padding: 11px; background: var(--wa-green); color: #111b21; font-weight: 700;
+      border: none; border-radius: 8px; cursor: pointer; font-size: 14px;
+    }
+
+    .toast-box { position: fixed; top: 16px; right: 16px; z-index: 99999; display: flex; flex-direction: column; gap: 6px; }
+    .toast {
+      padding: 10px 16px; background: #202c33; border-left: 4px solid var(--wa-green);
+      color: #fff; border-radius: 6px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+  <div id="toastBox" class="toast-box"></div>
+
+  <!-- ইনকামিং কল স্ক্রিন -->
+  <div id="incDialog" class="incoming-dialog">
+    <div class="inc-box">
+      <div class="wa-avatar" style="width:65px; height:65px; margin:0 auto 12px; font-size:26px;">👤</div>
+      <h3 id="incCallerTitle" style="color:#fff;">ফ্রেন্ড</h3>
+      <p id="incCallType" style="color:var(--wa-text-muted); font-size:12.5px; margin-top:4px;">ইনকামিং হোয়াটসঅ্যাপ কল...</p>
+      <div class="inc-btns">
+        <button id="btnIncDecline" class="inc-btn decline" title="কেটে দিন">✕</button>
+        <button id="btnIncAccept" class="inc-btn accept" title="রিসিভ করুন">📞</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎥 আল্ট্রা এইচডি কলিং স্ক্রিন -->
+  <div id="callWindow" class="call-window">
+    <div class="call-top-bar">
+      <h2 id="callTargetName" class="call-contact-title">ফ্রেন্ড</h2>
+      <div class="call-quality-badge">🔒 End-to-End Encrypted • 1080p HD</div>
+      <div id="callTimerLabel" style="font-size:12px; color:var(--wa-text-muted); margin-top:4px;">সংযুক্ত হচ্ছে...</div>
+    </div>
+
+    <div class="call-video-stage">
+      <video id="remoteVideo" autoplay playsinline></video>
+      <video id="localVideo" autoplay playsinline muted></video>
+      <div id="audioOnlyStage" style="display:none; flex-direction:column; align-items:center; gap:10px;">
+        <div class="wa-avatar" style="width:90px; height:90px; font-size:40px;">👤</div>
+        <p style="color:var(--wa-text-muted); font-size:13px;">ভয়েস কল চলছে</p>
+      </div>
+    </div>
+
+    <div class="call-ctrl-row">
+      <button id="btnMuteMic" class="ctrl-round toggle" title="মাইক অন/অফ">🎤</button>
+      <button id="btnEndCall" class="ctrl-round end" title="কল শেষ করুন">✕</button>
+      <button id="btnToggleCam" class="ctrl-round toggle" title="ক্যামেরা অন/অফ">📷</button>
+    </div>
+  </div>
+
+  <div id="app">
+    <div class="wa-container">
+
+      <!-- ════════════ ১. সাইডবার (চ্যাট লিস্ট) ════════════ -->
+      <aside class="sidebar" id="sidebarPanel">
+        <!-- সাইডবার হেডার -->
+        <div class="sidebar-header">
+          <div class="my-profile" id="btnEditProfile" title="প্রোফাইল পরিবর্তন করুন">
+            <div class="wa-avatar" id="myAvatar">👤<div class="status-online-dot"></div></div>
+            <div class="my-name-box">
+              <h2 id="myName">আমার নাম</h2>
+              <span>অনলাইন</span>
+            </div>
+          </div>
+          <div class="header-tools">
+            <button id="btnNewChat" class="tool-btn" title="নতুন চ্যাট শুরু করুন">💬</button>
+          </div>
+        </div>
+
+        <!-- সার্চ বক্স -->
+        <div class="search-box-wrap">
+          <div class="search-inner">
+            <span style="color:var(--wa-text-muted);">🔍</span>
+            <input id="inpSearchChats" placeholder="চ্যাট খুঁজুন বা শুরু করুন" />
+          </div>
+        </div>
+
+        <!-- চ্যাট লিস্ট -->
+        <div class="chat-list-scroll" id="chatsListContainer"></div>
+      </aside>
+
+      <!-- ════════════ ২. মেইন চ্যাট উইন্ডো ════════════ -->
+      <main class="main-chat" id="mainChatPanel">
+        <!-- চ্যাট হেডার -->
+        <header class="main-chat-header">
+          <div class="chat-header-user">
+            <button id="btnBackToSidebar" class="btn-back" title="পেছনে যান">←</button>
+            <div class="wa-avatar" id="activeChatAvatar">👤</div>
+            <div class="chat-header-meta">
+              <h3 id="activeChatName">চ্যাট নির্বাচন করুন</h3>
+              <span id="activeChatStatus">সর্বশেষ দেখা আজ...</span>
+            </div>
+          </div>
+          <div class="chat-actions">
+            <button id="btnCallAudio" class="tool-btn call-btn" title="অডিও কল">📞</button>
+            <button id="btnCallVideo" class="tool-btn call-btn" title="ভিডিও কল">🎥</button>
+          </div>
+        </header>
+
+        <!-- মেসেজ ভিউপোর্ট (হোয়াটসঅ্যাপ ব্যাকগ্রাউন্ড) -->
+        <div class="messages-viewport" id="messagesViewport">
+          <div class="date-separator">🔒 মেসেজ এন্ড-টু-এন্ড এনক্রিপ্টেড</div>
+        </div>
+
+        <!-- ইনপুট ফুটার -->
+        <footer class="chat-footer">
+          <button id="btnEmoji" class="footer-btn" title="ইমোজি">😀</button>
+          <button id="btnAttach" class="footer-btn" title="ফাইল/ছবি">📎</button>
+
+          <div class="input-pill">
+            <textarea id="chatInput" class="chat-textarea" placeholder="একটি বার্তা লিখুন..." rows="1"></textarea>
+          </div>
+
+          <button id="btnSend" class="footer-btn btn-send-green" title="পাঠান" disabled>➤</button>
+        </footer>
+
+        <!-- পপওভারস -->
+        <input id="filePhoto" type="file" accept="image/*" style="display:none;" />
+        <input id="fileCamera" type="file" accept="image/*" capture="environment" style="display:none;" />
+
+        <div id="attachPopover" class="wa-popover attach-grid">
+          <button id="actCamera" class="att-item-btn">📸 ক্যামেরা ছবি</button>
+          <button id="actGallery" class="att-item-btn">🖼️ গ্যালারি ছবি</button>
+        </div>
+
+        <div id="emojiPopover" class="wa-popover emoji-picker-wa">
+          <div id="emojiGrid" class="emoji-grid-wa"></div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- নতুন চ্যাট শুরু করার মোডাল -->
+  <div id="newChatModal" class="wa-modal">
+    <div class="wa-modal-card">
+      <h3 style="color:#fff; font-size:15px;">💬 নতুন চ্যাট শুরু করুন</h3>
+      <p style="font-size:12px; color:var(--wa-text-muted); margin-top:4px;">বন্ধুর ইউজারনেম লিখুন:</p>
+      <input id="inpFriendTag" class="wa-input" placeholder="যেমন: friend1 / sathi" />
+      <div style="display:flex; gap:8px;">
+        <button id="btnCancelNewChat" class="wa-btn-full" style="background:#2a3942; color:#fff;">বাতিল</button>
+        <button id="btnStartFriendChat" class="wa-btn-full">চ্যাট শুরু করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- প্রোফাইল এডিট মোডাল -->
+  <div id="profileModal" class="wa-modal">
+    <div class="wa-modal-card">
+      <h3 style="color:#fff; font-size:15px;">✏️ আপনার প্রোফাইল</h3>
+      <input id="inpMyNewName" class="wa-input" placeholder="আপনার নাম লিখুন..." />
+      <button id="btnSaveProfile" class="wa-btn-full">সংরক্ষণ করুন</button>
+    </div>
+  </div>
+
+  <!-- ════════════ WHATSAPP ARCHITECTURE JAVASCRIPT ENGINE ════════════ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, collection, addDoc, doc, updateDoc, setDoc, deleteDoc,
+      serverTimestamp, query, orderBy, limit, onSnapshot, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // 🎯 আপনার কনফিগারেশন
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmLJ5Vdd6Pqm-FrPfANvjy1TZkhG1mxns",
+      authDomain: "good-865a2.firebaseapp.com",
+      projectId: "good-865a2",
+      storageBucket: "good-865a2.firebasestorage.app",
+      messagingSenderId: "367706014019",
+      appId: "1:367706014019:web:f4e33a639f4573262baff6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const els = {
+      sidebarPanel: document.getElementById('sidebarPanel'),
+      mainChatPanel: document.getElementById('mainChatPanel'),
+      myName: document.getElementById('myName'),
+      myAvatar: document.getElementById('myAvatar'),
+      btnEditProfile: document.getElementById('btnEditProfile'),
+      profileModal: document.getElementById('profileModal'),
+      inpMyNewName: document.getElementById('inpMyNewName'),
+      btnSaveProfile: document.getElementById('btnSaveProfile'),
+      btnNewChat: document.getElementById('btnNewChat'),
+      newChatModal: document.getElementById('newChatModal'),
+      inpFriendTag: document.getElementById('inpFriendTag'),
+      btnCancelNewChat: document.getElementById('btnCancelNewChat'),
+      btnStartFriendChat: document.getElementById('btnStartFriendChat'),
+      chatsListContainer: document.getElementById('chatsListContainer'),
+      inpSearchChats: document.getElementById('inpSearchChats'),
+      btnBackToSidebar: document.getElementById('btnBackToSidebar'),
+      activeChatAvatar: document.getElementById('activeChatAvatar'),
+      activeChatName: document.getElementById('activeChatName'),
+      activeChatStatus: document.getElementById('activeChatStatus'),
+      btnCallAudio: document.getElementById('btnCallAudio'),
+      btnCallVideo: document.getElementById('btnCallVideo'),
+      messagesViewport: document.getElementById('messagesViewport'),
+      chatInput: document.getElementById('chatInput'),
+      btnSend: document.getElementById('btnSend'),
+      btnEmoji: document.getElementById('btnEmoji'),
+      emojiPopover: document.getElementById('emojiPopover'),
+      emojiGrid: document.getElementById('emojiGrid'),
+      btnAttach: document.getElementById('btnAttach'),
+      attachPopover: document.getElementById('attachPopover'),
+      actCamera: document.getElementById('actCamera'),
+      actGallery: document.getElementById('actGallery'),
+      filePhoto: document.getElementById('filePhoto'),
+      fileCamera: document.getElementById('fileCamera'),
+      toastBox: document.getElementById('toastBox'),
+
+      // Calling Elements
+      callWindow: document.getElementById('callWindow'),
+      callTargetName: document.getElementById('callTargetName'),
+      callTimerLabel: document.getElementById('callTimerLabel'),
+      localVideo: document.getElementById('localVideo'),
+      remoteVideo: document.getElementById('remoteVideo'),
+      audioOnlyStage: document.getElementById('audioOnlyStage'),
+      btnMuteMic: document.getElementById('btnMuteMic'),
+      btnToggleCam: document.getElementById('btnToggleCam'),
+      btnEndCall: document.getElementById('btnEndCall'),
+      incDialog: document.getElementById('incDialog'),
+      incCallerTitle: document.getElementById('incCallerTitle'),
+      incCallType: document.getElementById('incCallType'),
+      btnIncAccept: document.getElementById('btnIncAccept'),
+      btnIncDecline: document.getElementById('btnIncDecline')
+    };
+
+    let currentUser = null;
+    let activeChatId = 'global_community'; // ডিফল্ট কমিউনিটি রুম
+    let activeChatPartnerName = '🌟 অফিসিয়াল গ্লোবাল গ্রুপ';
+    let unsubActiveMessages = null;
+    let localStream = null;
+    let peerConnection = null;
+    let activeCallType = 'video';
+    let callTimerInterval = null;
+    let ringtoneAudio = null;
+    let isMuted = false;
+    let isCamOff = false;
+
+    const rtcConfig = {
+      iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }]
+    };
+
+    const EMOJIS = ["😀","😂","🥰","😍","😎","👍","🙏","❤️","🔥","🎉","✨","🌸","👏","💯","🥺","🥳","🙌","🌹","🤝","⭐","☕","🍔","🍕","⚽"];
+
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'toast'; t.textContent = msg;
+      els.toastBox.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 250); }, 3000);
+    }
+
+    /* ════════════ ১. অটো লগইন ও ইনিশিয়ালাইজেশন ════════════ */
+    async function initUser() {
+      let storedName = localStorage.getItem('wa_user_name');
+      if (!storedName) {
+        storedName = 'ইউজার_' + Math.floor(100 + Math.random() * 900);
+        localStorage.setItem('wa_user_name', storedName);
+      }
+      els.myName.textContent = storedName;
+      els.myAvatar.textContent = storedName.charAt(0).toUpperCase();
+
+      try {
+        await signInAnonymously(auth);
+      } catch (e) {
+        currentUser = { uid: localStorage.getItem('wa_user_uid') || 'uid_' + Date.now(), displayName: storedName };
+        localStorage.setItem('wa_user_uid', currentUser.uid);
+        setupUserSystem();
+      }
+    }
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        currentUser = user;
+        currentUser.displayName = localStorage.getItem('wa_user_name') || 'ইউজার';
+        setupUserSystem();
+      }
+    });
+
+    function setupUserSystem() {
+      loadChatList();
+      selectChat('global_community', '🌟 অফিসিয়াল গ্লোবাল গ্রুপ');
+      listenIncomingCalls();
+    }
+
+    // প্রোফাইল এডিট
+    els.btnEditProfile.onclick = () => {
+      els.inpMyNewName.value = localStorage.getItem('wa_user_name') || '';
+      els.profileModal.classList.add('show');
+    };
+    els.btnSaveProfile.onclick = () => {
+      const n = els.inpMyNewName.value.trim();
+      if (n) {
+        localStorage.setItem('wa_user_name', n);
+        if (currentUser) currentUser.displayName = n;
+        els.myName.textContent = n;
+        els.myAvatar.textContent = n.charAt(0).toUpperCase();
+        showToast('প্রোফাইল আপডেট হয়েছে');
+      }
+      els.profileModal.classList.remove('show');
+    };
+
+    /* ════════════ ২. সাইডবার ও চ্যাট লিস্ট ম্যানেজমেন্ট ════════════ */
+    function loadChatList() {
+      // লোকাল স্টোরেজ থেকে ফ্রেন্ডলিস্ট নেওয়া
+      let friends = JSON.parse(localStorage.getItem('wa_friends_list') || '[]');
+      
+      let html = `
+        <div class="chat-item ${activeChatId === 'global_community' ? 'active' : ''}" data-id="global_community" data-name="🌟 অফিসিয়াল গ্লোবাল গ্রুপ">
+          <div class="wa-avatar" style="background:#00a884;">🌟</div>
+          <div class="chat-item-info">
+            <div class="chat-item-top">
+              <span class="chat-item-name">অফিসিয়াল গ্লোবাল গ্রুপ</span>
+              <span class="chat-item-time">অনলাইন</span>
+            </div>
+            <div class="chat-item-bottom">
+              <span class="chat-item-msg">সবার সাথে কথা বলুন...</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      friends.forEach(f => {
+        const cId = getPrivateChatId(currentUser.uid, f.tag);
+        html += `
+          <div class="chat-item ${activeChatId === cId ? 'active' : ''}" data-id="${cId}" data-name="${f.name}">
+            <div class="wa-avatar">${f.name.charAt(0).toUpperCase()}</div>
+            <div class="chat-item-info">
+              <div class="chat-item-top">
+                <span class="chat-item-name">${f.name}</span>
+                <span class="chat-item-time">পার্সোনাল</span>
+              </div>
+              <div class="chat-item-bottom">
+                <span class="chat-item-msg">প্রাইভেট মেসেজ...</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      els.chatsListContainer.innerHTML = html;
+    }
+
+    function getPrivateChatId(uid1, tag) {
+      return 'chat_' + [uid1, tag].sort().join('_').replace(/[^a-zA-Z0-9_]/g, '');
+    }
+
+    // নতুন পার্সোনাল ফ্রেন্ড চ্যাট খোলা
+    els.btnNewChat.onclick = () => els.newChatModal.classList.add('show');
+    els.btnCancelNewChat.onclick = () => els.newChatModal.classList.remove('show');
+
+    els.btnStartFriendChat.onclick = () => {
+      const tag = els.inpFriendTag.value.trim();
+      if (!tag) return showToast('বন্ধুর নাম লিখুন');
+
+      let friends = JSON.parse(localStorage.getItem('wa_friends_list') || '[]');
+      if (!friends.find(f => f.tag === tag)) {
+        friends.push({ name: tag, tag: tag });
+        localStorage.setItem('wa_friends_list', JSON.stringify(friends));
+      }
+
+      loadChatList();
+      const newChatId = getPrivateChatId(currentUser.uid, tag);
+      selectChat(newChatId, tag);
+      els.newChatModal.classList.remove('show');
+      els.inpFriendTag.value = '';
+    };
+
+    // চ্যাট নির্বাচন
+    els.chatsListContainer.onclick = e => {
+      const item = e.target.closest('.chat-item');
+      if (item) {
+        document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        selectChat(item.dataset.id, item.dataset.name);
+      }
+    };
+
+    function selectChat(chatId, chatName) {
+      activeChatId = chatId;
+      activeChatPartnerName = chatName;
+
+      els.activeChatName.textContent = chatName;
+      els.activeChatAvatar.textContent = chatName.charAt(0).toUpperCase();
+      els.mainChatPanel.classList.add('active'); // মোবাইলে কনভারসেশন ওপেন
+
+      listenMessagesForActiveChat();
+    }
+
+    els.btnBackToSidebar.onclick = () => {
+      els.mainChatPanel.classList.remove('active'); // মোবাইলে ব্যাক
+    };
+
+    /* ════════════ ৩. রিয়েলটাইম মেসেজিং ইঞ্জিন (ইনক্রিমেন্টাল) ════════════ */
+    function listenMessagesForActiveChat() {
+      if (unsubActiveMessages) unsubActiveMessages();
+      els.messagesViewport.innerHTML = '<div class="date-separator">🔒 মেসেজ এন্ড-টু-এন্ড এনক্রিপ্টেড</div>';
+
+      const q = query(collection(db, 'chats', activeChatId, 'messages'), orderBy('createdAt', 'asc'), limit(60));
+
+      unsubActiveMessages = onSnapshot(q, snap => {
+        snap.docChanges().forEach(change => {
+          const m = { id: change.doc.id, ...change.doc.data() };
+          if (change.type === 'added') appendMessage(m);
+        });
+        els.messagesViewport.scrollTop = els.messagesViewport.scrollHeight;
+      });
+    }
+
+    function appendMessage(m) {
+      if (document.getElementById(`msg-${m.id}`)) return;
+      const isOwn = currentUser && m.senderId === currentUser.uid;
+      const row = document.createElement('div');
+      row.className = `msg-row ${isOwn ? 'own' : 'other'}`;
+      row.id = `msg-${m.id}`;
+
+      let mediaHtml = '';
+      if (m.type === 'image') {
+        mediaHtml = `<img src="${m.mediaUrl}" class="msg-media-img" loading="lazy" />`;
+      }
+
+      const textHtml = m.text ? `<div>${m.text}</div>` : '';
+      const timeStr = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleTimeString('bn-BD', {hour:'2-digit', minute:'2-digit'}) : 'এখন';
+      const tickHtml = isOwn ? `<span class="blue-tick">✓✓</span>` : '';
+
+      row.innerHTML = `
+        <div class="msg-bubble">
+          ${mediaHtml}
+          ${textHtml}
+          <div class="bubble-meta">
+            <span>${timeStr}</span>
+            ${tickHtml}
+          </div>
+        </div>
+      `;
+
+      els.messagesViewport.appendChild(row);
+    }
+
+    async function sendWaMessage(text = '', type = 'text', mediaUrl = null) {
+      if (!currentUser) return;
+      try {
+        await addDoc(collection(db, 'chats', activeChatId, 'messages'), {
+          text, type, mediaUrl,
+          senderId: currentUser.uid,
+          senderName: currentUser.displayName || 'ব্যবহারকারী',
+          createdAt: serverTimestamp()
+        });
+      } catch (e) { showToast('মেসেজ যায়নি'); }
+    }
+
+    els.btnSend.onclick = () => {
+      const t = els.chatInput.value.trim();
+      if (!t) return;
+      sendWaMessage(t, 'text');
+      els.chatInput.value = '';
+      els.chatInput.style.height = '22px';
+      els.btnSend.disabled = true;
+    };
+
+    els.chatInput.oninput = () => {
+      els.chatInput.style.height = 'auto';
+      els.chatInput.style.height = Math.min(els.chatInput.scrollHeight, 100) + 'px';
+      els.btnSend.disabled = !els.chatInput.value.trim();
+    };
+    els.chatInput.onkeydown = e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!els.btnSend.disabled) els.btnSend.click(); }
+    };
+
+    /* ════════════ ৪. নো-ইকো এইচডি অডিও/ভিডিও কলিং ════════════ */
+    els.btnCallAudio.onclick = () => initiateCall('audio');
+    els.btnCallVideo.onclick = () => initiateCall('video');
+
+    async function initiateCall(type) {
+      activeCallType = type;
+      showToast(type === 'video' ? '🎥 এইচডি ভিডিও কল শুরু হচ্ছে...' : '📞 অডিও কল শুরু হচ্ছে...');
+
+      const ready = await getMedia(type);
+      if (!ready) return;
+
+      setupCallInterface(type, activeChatPartnerName);
+
+      peerConnection = new RTCPeerConnection(rtcConfig);
+      bindPeerTracks();
+
+      localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+
+      peerConnection.onicecandidate = e => {
+        if (e.candidate) addDoc(collection(db, 'calls', activeChatId, 'callerCandidates'), e.candidate.toJSON());
+      };
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+
+      const callDoc = doc(db, 'calls', activeChatId);
+      await setDoc(callDoc, {
+        callerId: currentUser.uid,
+        callerName: currentUser.displayName || 'ফ্রেন্ড',
+        type: type,
+        status: 'calling',
+        offer: { type: offer.type, sdp: offer.sdp },
+        createdAt: Date.now()
+      });
+
+      const unsub = onSnapshot(callDoc, async snap => {
+        const d = snap.data();
+        if (d && d.status === 'connected' && d.answer && !peerConnection.currentRemoteDescription) {
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(d.answer));
+          startCallTimer();
+        } else if (d && d.status === 'ended') {
+          terminateCall(false);
+          unsub();
+        }
+      });
+
+      onSnapshot(collection(db, 'calls', activeChatId, 'calleeCandidates'), s => {
+        s.docChanges().forEach(c => {
+          if (c.type === 'added') peerConnection.addIceCandidate(new RTCIceCandidate(c.doc.data()));
+        });
+      });
+    }
+
+    function listenIncomingCalls() {
+      onSnapshot(doc(db, 'calls', activeChatId), snap => {
+        const d = snap.data();
+        if (d && d.status === 'calling' && d.callerId !== currentUser?.uid) {
+          if (Date.now() - d.createdAt > 45000) return;
+          els.incCallerTitle.textContent = d.callerName;
+          els.incCallType.textContent = d.type === 'video' ? 'ভিডিও কল...' : 'ভয়েস কল...';
+          els.incDialog.classList.add('show');
+
+          els.btnIncAccept.onclick = () => acceptCall(d);
+          els.btnIncDecline.onclick = () => declineCall();
+        } else if (d && d.status === 'ended') {
+          els.incDialog.classList.remove('show');
+        }
+      });
+    }
+
+    async function acceptCall(d) {
+      els.incDialog.classList.remove('show');
+      activeCallType = d.type;
+      const ready = await getMedia(d.type);
+      if (!ready) return;
+
+      setupCallInterface(d.type, d.callerName);
+
+      peerConnection = new RTCPeerConnection(rtcConfig);
+      bindPeerTracks();
+
+      localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+
+      peerConnection.onicecandidate = e => {
+        if (e.candidate) addDoc(collection(db, 'calls', activeChatId, 'calleeCandidates'), e.candidate.toJSON());
+      };
+
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(d.offer));
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+
+      await updateDoc(doc(db, 'calls', activeChatId), {
+        answer: { type: answer.type, sdp: answer.sdp },
+        status: 'connected'
+      });
+
+      onSnapshot(collection(db, 'calls', activeChatId, 'callerCandidates'), s => {
+        s.docChanges().forEach(c => {
+          if (c.type === 'added') peerConnection.addIceCandidate(new RTCIceCandidate(c.doc.data()));
+        });
+      });
+
+      startCallTimer();
+    }
+
+    async function declineCall() {
+      els.incDialog.classList.remove('show');
+      try { await updateDoc(doc(db, 'calls', activeChatId), { status: 'ended' }); } catch (e) {}
+    }
+
+    async function getMedia(type) {
+      try {
+        const constraints = {
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
+          video: type === 'video' ? { facingMode: 'user', width: { ideal: 1280 } } : false
+        };
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        els.localVideo.srcObject = localStream;
+        els.localVideo.muted = true; // লোকাল অডিও মিউট (জিরো ইকো)
+        return true;
+      } catch (err) {
+        alert('ক্যামেরা/মাইক পারমিশন পাওয়া যায়নি।');
+        return false;
+      }
+    }
+
+    function bindPeerTracks() {
+      peerConnection.ontrack = e => {
+        if (e.streams && e.streams[0]) {
+          els.remoteVideo.srcObject = e.streams[0];
+          els.remoteVideo.muted = false;
+        }
+      };
+    }
+
+    function setupCallInterface(type, name) {
+      els.callWindow.classList.add('show');
+      els.callTargetName.textContent = name;
+      els.callTimerLabel.textContent = 'সংযুক্ত হচ্ছে...';
+
+      if (type === 'audio') {
+        els.localVideo.style.display = 'none';
+        els.remoteVideo.style.display = 'none';
+        els.audioOnlyStage.style.display = 'flex';
+      } else {
+        els.localVideo.style.display = 'block';
+        els.remoteVideo.style.display = 'block';
+        els.audioOnlyStage.style.display = 'none';
+      }
+    }
+
+    function startCallTimer() {
+      const start = Date.now();
+      callTimerInterval = setInterval(() => {
+        const s = Math.floor((Date.now() - start) / 1000);
+        const m = Math.floor(s / 60);
+        els.callTimerLabel.textContent = `${m < 10 ? '0' : ''}${m}:${(s % 60) < 10 ? '0' : ''}${s % 60}`;
+      }, 1000);
+    }
+
+    els.btnEndCall.onclick = () => terminateCall(true);
+
+    async function terminateCall(notify = true) {
+      if (callTimerInterval) clearInterval(callTimerInterval);
+      if (localStream) localStream.getTracks().forEach(t => t.stop());
+      if (peerConnection) { peerConnection.close(); peerConnection = null; }
+
+      els.localVideo.srcObject = null;
+      els.remoteVideo.srcObject = null;
+      els.callWindow.classList.remove('show');
+      showToast('কল সমাপ্ত হয়েছে');
+
+      if (notify) {
+        try { await updateDoc(doc(db, 'calls', activeChatId), { status: 'ended' }); } catch (e) {}
+      }
+    }
+
+    els.btnMuteMic.onclick = () => {
+      if (!localStream) return;
+      isMuted = !isMuted;
+      localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+      els.btnMuteMic.textContent = isMuted ? '🔇' : '🎤';
+    };
+
+    els.btnToggleCam.onclick = () => {
+      if (!localStream || activeCallType === 'audio') return;
+      isCamOff = !isCamOff;
+      localStream.getVideoTracks().forEach(t => t.enabled = !isCamOff);
+      els.btnToggleCam.textContent = isCamOff ? '🚫' : '📷';
+    };
+
+    /* ════════════ ৫. ফটো কম্প্রেশন ও ইমোজি ════════════ */
+    els.btnAttach.onclick = e => { e.stopPropagation(); els.attachPopover.classList.toggle('show'); };
+    els.actCamera.onclick = () => { els.attachPopover.classList.remove('show'); els.fileCamera.click(); };
+    els.actGallery.onclick = () => { els.attachPopover.classList.remove('show'); els.filePhoto.click(); };
+
+    els.fileCamera.onchange = els.filePhoto.onchange = async e => {
+      const f = e.target.files[0];
+      if (f) {
+        showToast('ছবি প্রস্তুত হচ্ছে...');
+        const b64 = await compressPhoto(f);
+        sendWaMessage('', 'image', b64);
+      }
+      e.target.value = '';
+    };
+
+    function compressPhoto(file) {
+      return new Promise(resolve => {
+        const r = new FileReader(); r.readAsDataURL(file);
+        r.onload = ev => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height, max = 500;
+            if (w > h && w > max) { h = Math.round((h * max) / w); w = max; }
+            else if (h > max) { w = Math.round((w * max) / h); h = max; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.5));
+          };
+          img.src = ev.target.result;
+        };
+      });
+    }
+
+    els.btnEmoji.onclick = e => {
+      e.stopPropagation();
+      els.emojiPopover.classList.toggle('show');
+    };
+    els.emojiGrid.innerHTML = EMOJIS.map(em => `<button class="em-item">${em}</button>`).join('');
+    els.emojiGrid.onclick = e => {
+      if (e.target.classList.contains('em-item')) {
+        els.chatInput.value += e.target.textContent;
+        els.btnSend.disabled = false;
+      }
+    };
+
+    document.onclick = () => {
+      els.attachPopover.classList.remove('show');
+      els.emojiPopover.classList.remove('show');
+    };
+
+    initUser();
+  </script>
+</body>
+</html>
