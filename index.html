@@ -1,0 +1,3296 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Divine Chat — প্রিমিয়াম রিয়েলটাইম চ্যাট</title>
+
+  <!-- Google Fonts: Inter & Sora -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       CSS VARIABLES & THEME SYSTEM (Divine Dark Glassmorphism)
+       ═══════════════════════════════════════════════════════ */
+    :root {
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-heading: 'Sora', var(--font-body);
+
+      /* Colors: Dark theme (#0f172a base, #6366f1 accent) */
+      --bg-dark: #090d16;
+      --bg-surface: #0f172a;
+      --primary-indigo: #6366f1;
+      --primary-purple: #8b5cf6;
+      --primary-pink: #ec4899;
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+      --bubble-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      --accent-glow: rgba(99, 102, 241, 0.4);
+      --accent-pink-glow: rgba(236, 72, 153, 0.35);
+
+      /* Glassmorphism surfaces */
+      --surface-glass: rgba(15, 23, 42, 0.72);
+      --surface-glass-card: rgba(30, 41, 59, 0.75);
+      --surface-glass-input: rgba(15, 23, 42, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-border-light: rgba(255, 255, 255, 0.2);
+      --glass-blur: blur(20px) saturate(180%);
+
+      /* Status colors */
+      --status-online: #10b981;
+      --status-error: #ef4444;
+      --status-warning: #f59e0b;
+      --status-info: #3b82f6;
+
+      /* Typography colors */
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+
+      /* Transitions */
+      --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+      --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --transition-fast: 0.18s var(--ease-smooth);
+      --transition-normal: 0.28s var(--ease-smooth);
+    }
+
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Animated Mesh Background with Floating Orbs */
+    .mesh-background {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      background: radial-gradient(circle at 12% 18%, rgba(99, 102, 241, 0.22) 0%, transparent 45%),
+                  radial-gradient(circle at 88% 28%, rgba(236, 72, 153, 0.18) 0%, transparent 40%),
+                  radial-gradient(circle at 50% 82%, rgba(139, 92, 246, 0.22) 0%, transparent 50%),
+                  var(--bg-dark);
+      animation: meshShift 24s ease-in-out infinite alternate;
+    }
+
+    @keyframes meshShift {
+      0% { filter: hue-rotate(0deg) scale(1); }
+      50% { filter: hue-rotate(20deg) scale(1.04); }
+      100% { filter: hue-rotate(-20deg) scale(1); }
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.45;
+      animation: floatOrb 18s ease-in-out infinite alternate;
+    }
+    .orb-1 {
+      width: 380px;
+      height: 380px;
+      background: var(--primary-indigo);
+      top: -100px;
+      left: -80px;
+    }
+    .orb-2 {
+      width: 340px;
+      height: 340px;
+      background: var(--primary-pink);
+      bottom: -80px;
+      right: -80px;
+      animation-delay: -6s;
+    }
+    .orb-3 {
+      width: 300px;
+      height: 300px;
+      background: var(--primary-purple);
+      top: 40%;
+      left: 55%;
+      animation-delay: -11s;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(40px, -50px) scale(1.08); }
+      100% { transform: translate(-30px, 40px) scale(0.95); }
+    }
+
+    /* App Wrapper */
+    #app {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       AUTH SCREEN (GLASS CARD)
+       ═══════════════════════════════════════════════════════ */
+    .auth-wrapper {
+      width: 100%;
+      max-width: 440px;
+      padding: 20px;
+      animation: fadeIn 0.4s var(--ease-smooth);
+    }
+
+    .auth-card {
+      position: relative;
+      background: var(--surface-glass-card);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px;
+      padding: 36px 30px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65), 0 0 40px -15px var(--accent-glow);
+      overflow: hidden;
+    }
+
+    .auth-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--primary-gradient);
+    }
+
+    .auth-brand {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .brand-logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      background: var(--primary-gradient);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px -5px var(--accent-glow);
+      margin-bottom: 12px;
+      animation: pulseGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 10px 25px -5px var(--accent-glow); }
+      100% { box-shadow: 0 15px 35px 2px var(--accent-pink-glow); }
+    }
+
+    .auth-title {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff 40%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .auth-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Auth Tabs */
+    .auth-tabs {
+      position: relative;
+      display: flex;
+      background: rgba(10, 15, 29, 0.65);
+      padding: 4px;
+      border-radius: 14px;
+      border: 1px solid var(--glass-border);
+      margin-bottom: 22px;
+    }
+
+    .tab-slider {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      width: calc(50% - 4px);
+      left: 4px;
+      background: var(--primary-gradient);
+      border-radius: 10px;
+      transition: transform var(--transition-normal);
+      box-shadow: 0 4px 12px var(--accent-glow);
+      pointer-events: none;
+    }
+
+    .tab-btn {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      padding: 9px 0;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 13.5px;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: color var(--transition-fast);
+      font-family: var(--font-heading);
+    }
+
+    .tab-btn.active {
+      color: #ffffff;
+    }
+
+    /* Bangla Error Banner */
+    .auth-error-banner {
+      display: none;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      margin-bottom: 18px;
+      align-items: center;
+      gap: 8px;
+      animation: slideInDown 0.3s var(--ease-smooth);
+    }
+
+    .auth-error-banner.show {
+      display: flex;
+    }
+
+    /* Floating Label Inputs */
+    .input-group {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .input-field {
+      width: 100%;
+      background: var(--surface-glass-input);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 15px 44px 15px 16px;
+      color: var(--text-main);
+      font-size: 14.5px;
+      font-family: var(--font-body);
+      transition: all var(--transition-fast);
+      outline: none;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary-indigo);
+      background: rgba(20, 29, 50, 0.85);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+
+    .input-label {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-subtle);
+      font-size: 14px;
+      pointer-events: none;
+      transition: all var(--transition-fast);
+      background: transparent;
+    }
+
+    .input-field:focus ~ .input-label,
+    .input-field:not(:placeholder-shown) ~ .input-label {
+      top: 0;
+      left: 12px;
+      transform: translateY(-50%) scale(0.85);
+      background: #0f172a;
+      padding: 0 6px;
+      border-radius: 4px;
+      color: #a5b4fc;
+      font-weight: 500;
+    }
+
+    .input-icon-right {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color var(--transition-fast);
+    }
+
+    .input-icon-right:hover {
+      color: #ffffff;
+    }
+
+    /* Primary & Social Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 14px;
+      font-family: var(--font-heading);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid #ffffff;
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px 20px;
+      background: var(--primary-gradient);
+      color: #ffffff;
+      box-shadow: 0 8px 24px -4px var(--accent-glow);
+      margin-top: 6px;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 12px 30px -2px var(--accent-pink-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    .btn.is-loading .btn-text {
+      opacity: 0;
+    }
+
+    .btn.is-loading .btn-spinner {
+      display: block;
+      position: absolute;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 16px;
+      color: var(--text-subtle);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--glass-border);
+    }
+
+    .social-auth-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn-social {
+      padding: 11px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      font-size: 13px;
+    }
+
+    .btn-social:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--glass-border-light);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       MAIN CHAT SCREEN LAYOUT
+       ═══════════════════════════════════════════════════════ */
+    .chat-layout {
+      width: 100%;
+      height: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-left: 1px solid var(--glass-border);
+      border-right: 1px solid var(--glass-border);
+      box-shadow: 0 0 80px rgba(0, 0, 0, 0.6);
+    }
+
+    @media (max-width: 1080px) {
+      .chat-layout {
+        border-left: none;
+        border-right: none;
+      }
+    }
+
+    /* Chat Header */
+    .chat-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: var(--surface-glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+    }
+
+    .user-avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 14px;
+      object-fit: cover;
+      background: var(--primary-gradient);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      font-family: var(--font-heading);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--glass-border-light);
+    }
+
+    .online-indicator {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 12px;
+      height: 12px;
+      background: var(--status-online);
+      border-radius: 50%;
+      border: 2px solid var(--bg-surface);
+    }
+
+    .online-indicator::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      border: 1.5px solid var(--status-online);
+      animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes ping {
+      75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+
+    .header-meta h2 {
+      font-size: 16px;
+      font-weight: 700;
+      font-family: var(--font-heading);
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .header-meta .status-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-meta .status-text::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--status-online);
+      display: inline-block;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .btn-icon:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border-color: var(--glass-border-light);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       MESSAGES CONTAINER & BUBBLES
+       ═══════════════════════════════════════════════════════ */
+    .messages-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 20px 20px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      scroll-behavior: smooth;
+    }
+
+    .messages-area::-webkit-scrollbar {
+      width: 6px;
+    }
+    .messages-area::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .messages-area::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+    }
+
+    /* Date Separator */
+    .date-separator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 16px 0 10px;
+      user-select: none;
+    }
+
+    .date-badge {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: var(--font-heading);
+      letter-spacing: 0.3px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 30px 20px;
+      max-width: 340px;
+    }
+
+    .empty-icon-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: 26px;
+      background: var(--surface-glass-card);
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 30px -10px var(--accent-glow);
+      margin-bottom: 18px;
+      color: #a5b4fc;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: var(--font-heading);
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .empty-state p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+    }
+
+    /* Message Row & WhatsApp-Style Bubbles */
+    .message-row {
+      position: relative;
+      display: flex;
+      gap: 10px;
+      max-width: 78%;
+      animation: messageSlideIn 0.24s var(--ease-smooth);
+    }
+
+    @keyframes messageSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .message-row.own {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .message-row.other {
+      align-self: flex-start;
+    }
+
+    .msg-avatar-slot {
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+      align-self: flex-end;
+    }
+
+    .msg-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: var(--primary-gradient);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--font-heading);
+      border: 1px solid var(--glass-border);
+    }
+
+    .msg-bubble-wrap {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .msg-sender-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: #a5b4fc;
+      margin-bottom: 4px;
+      margin-left: 10px;
+    }
+
+    .msg-bubble {
+      position: relative;
+      padding: 10px 14px;
+      border-radius: 18px;
+      word-break: break-word;
+      font-size: 14.5px;
+      line-height: 1.45;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: 0 4px 18px -4px rgba(0, 0, 0, 0.45);
+      transition: box-shadow var(--transition-fast);
+    }
+
+    /* Own Bubble */
+    .message-row.own .msg-bubble {
+      background: var(--bubble-gradient);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 4px 20px -3px var(--accent-glow);
+    }
+
+    /* Other Bubble */
+    .message-row.other .msg-bubble {
+      background: var(--surface-glass-card);
+      color: var(--text-main);
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--glass-border);
+    }
+
+    /* Grouped Messages */
+    .message-row.grouped-middle .msg-bubble,
+    .message-row.grouped-start .msg-bubble {
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+    }
+
+    /* Quoted Message Preview inside bubble */
+    .msg-quote {
+      background: rgba(0, 0, 0, 0.22);
+      border-left: 3.5px solid #ffffff;
+      border-radius: 8px;
+      padding: 6px 10px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+
+    .message-row.other .msg-quote {
+      border-left-color: var(--primary-indigo);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .quote-sender {
+      font-weight: 700;
+      font-size: 11px;
+      margin-bottom: 2px;
+      color: #f1f5f9;
+    }
+
+    .quote-text {
+      color: rgba(255, 255, 255, 0.8);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 260px;
+    }
+
+    /* Deleted Bubble Style */
+    .msg-bubble.is-deleted {
+      font-style: italic;
+      color: var(--text-subtle) !important;
+      background: rgba(255, 255, 255, 0.03) !important;
+      border-color: rgba(255, 255, 255, 0.06) !important;
+      box-shadow: none !important;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Bubble Meta */
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 5px;
+      margin-top: 4px;
+      font-size: 10.5px;
+      user-select: none;
+      opacity: 0.8;
+    }
+
+    .message-row.own .msg-meta {
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    .message-row.other .msg-meta {
+      color: var(--text-muted);
+    }
+
+    .edited-badge {
+      font-size: 10px;
+      opacity: 0.85;
+    }
+
+    /* Action Hover Toolbar */
+    .msg-action-bar {
+      position: absolute;
+      top: -14px;
+      display: none;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border-light);
+      border-radius: 12px;
+      padding: 3px 5px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      z-index: 5;
+      gap: 2px;
+    }
+
+    .message-row.own .msg-action-bar {
+      right: 8px;
+    }
+    .message-row.other .msg-action-bar {
+      left: 8px;
+    }
+
+    .msg-bubble-wrap:hover .msg-action-bar,
+    .msg-bubble-wrap:focus-within .msg-action-bar {
+      display: flex;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 4px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .action-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .action-btn.btn-danger:hover {
+      color: #f87171;
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* Image & File Messages */
+    .msg-image-wrap {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 4px;
+      max-width: 320px;
+      max-height: 380px;
+      background: rgba(0, 0, 0, 0.2);
+      cursor: zoom-in;
+    }
+
+    .msg-image-thumb {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      border-radius: 12px;
+      transition: transform var(--transition-normal);
+    }
+
+    .msg-image-wrap:hover .msg-image-thumb {
+      transform: scale(1.02);
+    }
+
+    .msg-file-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-decoration: none;
+      color: inherit;
+      transition: background var(--transition-fast);
+      min-width: 240px;
+      max-width: 320px;
+    }
+
+    .msg-file-card:hover {
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    .file-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--primary-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #fff;
+    }
+
+    .file-details {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .file-name {
+      font-weight: 600;
+      font-size: 13.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 2px;
+    }
+
+    .file-download-icon {
+      padding: 6px;
+      color: #ffffff;
+      opacity: 0.85;
+    }
+
+    /* Custom Voice Player */
+    .msg-voice-player {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 230px;
+      max-width: 290px;
+      padding: 4px 0;
+    }
+
+    .voice-play-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: #ffffff;
+      color: var(--primary-indigo);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      transition: transform var(--transition-fast);
+    }
+
+    .message-row.other .voice-play-btn {
+      background: var(--primary-gradient);
+      color: #ffffff;
+    }
+
+    .voice-play-btn:active {
+      transform: scale(0.92);
+    }
+
+    .voice-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .voice-waveform {
+      height: 24px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+    }
+
+    .wave-bar {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.35);
+      border-radius: 4px;
+      transition: background 0.15s ease, height 0.15s ease;
+    }
+
+    .wave-bar.played {
+      background: #ffffff;
+    }
+
+    .message-row.other .wave-bar {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .message-row.other .wave-bar.played {
+      background: var(--primary-indigo);
+    }
+
+    .voice-bottom-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .voice-speed-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.25);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Floating Scroll to Bottom Button */
+    .scroll-bottom-btn {
+      position: absolute;
+      bottom: 84px;
+      right: 24px;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--surface-glass-card);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border-light);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px) scale(0.9);
+      transition: all var(--transition-normal);
+      z-index: 15;
+    }
+
+    .scroll-bottom-btn.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Input Bar & Overlays */
+    .chat-bottom-wrapper {
+      position: relative;
+      background: var(--surface-glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--glass-border);
+      padding: 10px 16px 14px;
+      z-index: 25;
+    }
+
+    .upload-progress-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      display: none;
+      overflow: hidden;
+    }
+
+    .upload-progress-container.show {
+      display: block;
+    }
+
+    .upload-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary-gradient);
+      transition: width 0.15s linear;
+    }
+
+    .action-preview-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.04);
+      border-left: 3.5px solid var(--primary-indigo);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      animation: slideInDown 0.2s var(--ease-smooth);
+    }
+
+    .action-preview-banner.show {
+      display: flex;
+    }
+
+    .action-preview-content {
+      overflow: hidden;
+    }
+
+    .action-preview-title {
+      font-weight: 700;
+      font-size: 11.5px;
+      color: #a5b4fc;
+      margin-bottom: 2px;
+    }
+
+    .action-preview-text {
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 480px;
+    }
+
+    .action-preview-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .chat-input-bar {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      position: relative;
+    }
+
+    .input-actions-left {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding-bottom: 4px;
+    }
+
+    .textarea-wrapper {
+      flex: 1;
+      position: relative;
+      background: var(--surface-glass-input);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      transition: all var(--transition-fast);
+    }
+
+    .textarea-wrapper:focus-within {
+      border-color: var(--primary-indigo);
+      background: rgba(20, 29, 50, 0.85);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+    }
+
+    .chat-textarea {
+      width: 100%;
+      max-height: 130px;
+      min-height: 42px;
+      height: 42px;
+      padding: 9px 14px;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 14.5px;
+      line-height: 1.4;
+      resize: none;
+      outline: none;
+    }
+
+    .btn-send {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: var(--primary-gradient);
+      border: none;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 6px 18px var(--accent-glow);
+      transition: all var(--transition-fast);
+    }
+
+    .btn-send:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Voice Recording Bar */
+    .recording-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 20px;
+      padding: 8px 14px;
+      width: 100%;
+      animation: slideInUp 0.2s var(--ease-smooth);
+    }
+
+    .recording-bar.show {
+      display: flex;
+    }
+
+    .recording-live-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rec-red-dot {
+      width: 10px;
+      height: 10px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: recPulse 1s ease-in-out infinite;
+    }
+
+    @keyframes recPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    .rec-timer {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 14px;
+      color: #ffffff;
+    }
+
+    .rec-wave-animation {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 20px;
+    }
+
+    .rec-wave-bar {
+      width: 3px;
+      height: 16px;
+      background: #f87171;
+      border-radius: 2px;
+      animation: recWave 0.8s ease-in-out infinite alternate;
+    }
+
+    .rec-wave-bar:nth-child(2) { animation-delay: 0.15s; height: 10px; }
+    .rec-wave-bar:nth-child(3) { animation-delay: 0.3s; height: 22px; }
+    .rec-wave-bar:nth-child(4) { animation-delay: 0.45s; height: 14px; }
+    .rec-wave-bar:nth-child(5) { animation-delay: 0.6s; height: 8px; }
+
+    @keyframes recWave {
+      from { height: 4px; }
+      to { height: 22px; }
+    }
+
+    .recording-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Popovers: Attachment & Emoji */
+    .attachment-menu {
+      position: absolute;
+      bottom: 60px;
+      left: 10px;
+      background: var(--surface-glass-card);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border-light);
+      border-radius: 16px;
+      padding: 8px;
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+      z-index: 30;
+      width: 170px;
+      animation: popIn 0.2s var(--ease-bounce);
+    }
+
+    .attachment-menu.show {
+      display: flex;
+    }
+
+    .attachment-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 13.5px;
+      font-weight: 500;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+
+    .attachment-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .emoji-picker-popover {
+      position: absolute;
+      bottom: 66px;
+      left: 48px;
+      width: 320px;
+      max-height: 340px;
+      background: var(--surface-glass-card);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border-light);
+      border-radius: 20px;
+      padding: 12px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+      display: none;
+      flex-direction: column;
+      z-index: 35;
+      animation: popIn 0.2s var(--ease-bounce);
+    }
+
+    .emoji-picker-popover.show {
+      display: flex;
+    }
+
+    .emoji-category-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 6px;
+    }
+
+    .emoji-cat-btn {
+      background: transparent;
+      border: none;
+      font-size: 16px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: all var(--transition-fast);
+    }
+
+    .emoji-cat-btn.active, .emoji-cat-btn:hover {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .emoji-grid {
+      flex: 1;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      max-height: 240px;
+    }
+
+    .emoji-btn {
+      background: transparent;
+      border: none;
+      font-size: 21px;
+      padding: 5px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform var(--transition-fast);
+    }
+
+    .emoji-btn:hover {
+      transform: scale(1.25);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Modals & Toasts */
+    .toast-container {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast-item {
+      pointer-events: auto;
+      min-width: 280px;
+      max-width: 380px;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border-light);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffffff;
+      font-size: 13.5px;
+      animation: slideInRight 0.3s var(--ease-smooth);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .toast-item.toast-success { border-left: 4px solid var(--status-online); }
+    .toast-item.toast-error { border-left: 4px solid var(--status-error); }
+    .toast-item.toast-info { border-left: 4px solid var(--status-info); }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s var(--ease-smooth);
+    }
+
+    .modal-backdrop.show { display: flex; }
+
+    .image-modal-card {
+      position: relative;
+      max-width: 90vw;
+      max-height: 88vh;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+    }
+
+    .image-modal-card img {
+      max-width: 100%;
+      max-height: 84vh;
+      display: block;
+      object-fit: contain;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .confirm-card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--surface-glass-card);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border-light);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      text-align: center;
+      animation: popIn 0.2s var(--ease-bounce);
+    }
+
+    .confirm-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .confirm-card h3 {
+      font-size: 18px;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .confirm-card p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .confirm-actions .btn {
+      flex: 1;
+      padding: 11px;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid var(--glass-border);
+    }
+
+    .btn-danger-solid {
+      background: #ef4444;
+      color: #ffffff;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideInDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+  </style>
+</head>
+<body>
+  <!-- Animated Mesh Background -->
+  <div class="mesh-background" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- App Wrapper -->
+  <div id="app">
+    <!-- ═══════════════════════════════════════════════════════
+         AUTH SCREEN
+         ═══════════════════════════════════════════════════════ -->
+    <div id="authSection" class="auth-wrapper">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <div class="brand-logo">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h1 class="auth-title">Divine Chat</h1>
+          <p class="auth-subtitle">প্রিমিয়াম রিয়েলটাইম মেসেজিং প্ল্যাটফর্ম</p>
+        </div>
+
+        <div class="auth-tabs">
+          <div id="tabSlider" class="tab-slider"></div>
+          <button id="tabLoginBtn" class="tab-btn active" type="button">লগইন</button>
+          <button id="tabSignupBtn" class="tab-btn" type="button">নিবন্ধন</button>
+        </div>
+
+        <div id="authErrorBanner" class="auth-error-banner" role="alert">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="authErrorText">ত্রুটি ঘটেছে</span>
+        </div>
+
+        <form id="authForm" autocomplete="off">
+          <div id="nameGroup" class="input-group" style="display: none;">
+            <input id="authNameInput" type="text" class="input-field" placeholder=" " />
+            <label for="authNameInput" class="input-label">আপনার নাম</label>
+          </div>
+
+          <div class="input-group">
+            <input id="authEmailInput" type="email" class="input-field" placeholder=" " required />
+            <label for="authEmailInput" class="input-label">ইমেইল ঠিকানা</label>
+          </div>
+
+          <div class="input-group">
+            <input id="authPasswordInput" type="password" class="input-field" placeholder=" " required />
+            <label for="authPasswordInput" class="input-label">পাসওয়ার্ড</label>
+            <button id="togglePasswordBtn" type="button" class="input-icon-right" aria-label="পাসওয়ার্ড দেখান বা লুকান">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+
+          <button id="authSubmitBtn" type="submit" class="btn btn-primary">
+            <span class="btn-text">লগইন করুন</span>
+            <div class="btn-spinner" aria-hidden="true"></div>
+          </button>
+        </form>
+
+        <div class="auth-divider">অথবা দিয়ে চালিয়ে যান</div>
+
+        <div class="social-auth-grid">
+          <button id="googleSignInBtn" class="btn btn-social" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.9C6.2 7.3 8.9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.3 14.7c-.2-.7-.4-1.5-.4-2.4s.2-1.7.4-2.4L1.6 7c-.8 1.6-1.3 3.4-1.3 5.3s.5 3.7 1.3 5.3l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.9C3.5 20.1 7.4 23 12 23z"/></svg>
+            Google
+          </button>
+          <button id="anonymousSignInBtn" class="btn btn-social" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            গেস্ট (Guest)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         CHAT SCREEN
+         ═══════════════════════════════════════════════════════ -->
+    <div id="chatSection" class="chat-layout" style="display: none;">
+      <!-- Header -->
+      <header class="chat-header">
+        <div class="header-user">
+          <div class="avatar-wrapper">
+            <div id="currentUserAvatar" class="user-avatar">U</div>
+            <div class="online-indicator" title="অনলাইন"></div>
+          </div>
+          <div class="header-meta">
+            <h2 id="currentUserName">ব্যবহারকারী</h2>
+            <span class="status-text">অনলাইন</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="logoutBtn" class="btn-icon" title="লগআউট করুন" aria-label="লগআউট">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Messages Scroll Area -->
+      <div id="messagesContainer" class="messages-area" role="log" aria-live="polite">
+        <div id="emptyState" class="empty-state">
+          <div class="empty-icon-wrap">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </div>
+          <h3>চ্যাট শুরু করুন</h3>
+          <p>এখানে যেকোনো বার্তা, ছবি, ভয়েস বা ফাইল আদান-প্রদান করুন। সম্পূর্ণ রিয়েলটাইম ও এনক্রিপ্টেড।</p>
+        </div>
+      </div>
+
+      <!-- Floating Scroll to Bottom Button -->
+      <button id="scrollToBottomBtn" class="scroll-bottom-btn" aria-label="নিচে যান">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+      </button>
+
+      <!-- Bottom Chat Controls -->
+      <footer class="chat-bottom-wrapper">
+        <div id="uploadProgressBarContainer" class="upload-progress-container">
+          <div id="uploadProgressBar" class="upload-progress-bar"></div>
+        </div>
+
+        <!-- Reply Preview Banner -->
+        <div id="replyBanner" class="action-preview-banner">
+          <div class="action-preview-content">
+            <div id="replyBannerSender" class="action-preview-title">উত্তরে: নাম</div>
+            <div id="replyBannerText" class="action-preview-text">মেসেজ টেক্সট...</div>
+          </div>
+          <button id="closeReplyBtn" type="button" class="action-preview-close" aria-label="উত্তর বাতিল">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <!-- Edit Preview Banner -->
+        <div id="editBanner" class="action-preview-banner" style="border-left-color: var(--primary-pink);">
+          <div class="action-preview-content">
+            <div class="action-preview-title" style="color: #f472b6;">মেসেজ সম্পাদন করা হচ্ছে</div>
+            <div id="editBannerText" class="action-preview-text">মূল বার্তা...</div>
+          </div>
+          <button id="closeEditBtn" type="button" class="action-preview-close" aria-label="সম্পাদনা বাতিল">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <!-- Text Input Bar -->
+        <div id="mainInputBar" class="chat-input-bar">
+          <div class="input-actions-left">
+            <button id="attachmentToggleBtn" class="btn-icon" type="button" title="সংযুক্তি" aria-label="সংযুক্তি ফাইল">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <button id="emojiToggleBtn" class="btn-icon" type="button" title="ইমোজি" aria-label="ইমোজি বাছুন">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </button>
+          </div>
+
+          <div class="textarea-wrapper">
+            <textarea id="chatTextarea" class="chat-textarea" placeholder="একটি মেসেজ লিখুন... (Enter চাপুন)" rows="1"></textarea>
+          </div>
+
+          <button id="voiceRecordBtn" class="btn-icon" type="button" title="ভয়েস রেকর্ড" aria-label="ভয়েস রেকর্ড">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+
+          <button id="sendMessageBtn" class="btn-send" type="button" disabled title="পাঠান" aria-label="মেসেজ পাঠান">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+
+        <!-- Voice Recording Overlay -->
+        <div id="recordingBar" class="recording-bar">
+          <div class="recording-live-indicator">
+            <div class="rec-red-dot"></div>
+            <span id="recordingTimer" class="rec-timer">00:00</span>
+            <div class="rec-wave-animation">
+              <div class="rec-wave-bar"></div>
+              <div class="rec-wave-bar"></div>
+              <div class="rec-wave-bar"></div>
+              <div class="rec-wave-bar"></div>
+              <div class="rec-wave-bar"></div>
+            </div>
+          </div>
+          <div class="recording-actions">
+            <button id="cancelRecordBtn" class="btn-icon btn-danger" type="button" title="বাতিল" aria-label="রেকর্ড বাতিল">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+            <button id="stopAndSendRecordBtn" class="btn-send" type="button" title="পাঠান" aria-label="ভয়েস পাঠান">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Hidden File Inputs -->
+        <input id="imageFileInput" type="file" accept="image/*" style="display: none;" />
+        <input id="docFileInput" type="file" accept=".pdf,.doc,.docx,.txt" style="display: none;" />
+        <input id="anyFileInput" type="file" accept="*/*" style="display: none;" />
+
+        <!-- Popovers -->
+        <div id="attachmentMenu" class="attachment-menu">
+          <button id="attachPhotoBtn" class="attachment-item" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>ছবি (Photo)</span>
+          </button>
+          <button id="attachDocBtn" class="attachment-item" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>ডকুমেন্ট (PDF)</span>
+          </button>
+          <button id="attachAnyFileBtn" class="attachment-item" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            <span>অন্যান্য ফাইল</span>
+          </button>
+        </div>
+
+        <div id="emojiPickerPopover" class="emoji-picker-popover">
+          <div class="emoji-category-tabs">
+            <button class="emoji-cat-btn active" data-cat="smileys" type="button">😀</button>
+            <button class="emoji-cat-btn" data-cat="gestures" type="button">👍</button>
+            <button class="emoji-cat-btn" data-cat="hearts" type="button">❤️</button>
+            <button class="emoji-cat-btn" data-cat="objects" type="button">🎉</button>
+          </div>
+          <div id="emojiGrid" class="emoji-grid"></div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="imageModal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="image-modal-card">
+      <img id="imageModalTarget" src="" alt="বড় ছবি" />
+      <button id="closeImageModalBtn" class="modal-close-btn" type="button" aria-label="বন্ধ করুন">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="deleteConfirmModal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="confirm-card">
+      <div class="confirm-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </div>
+      <h3>মেসেজ মুছে ফেলতে চান?</h3>
+      <p>এই বার্তাটি সবার জন্য মুছে ফেলা হবে এবং এটি আর ফেরত পাওয়া যাবে না।</p>
+      <div class="confirm-actions">
+        <button id="cancelDeleteModalBtn" class="btn btn-secondary" type="button">বাতিল</button>
+        <button id="confirmDeleteModalBtn" class="btn btn-danger-solid" type="button">মুছে ফেলুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FIREBASE MODULE & APPLICATION LOGIC (INITIALIZATION)
+       ═══════════════════════════════════════════════════════ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signInWithPopup,
+      GoogleAuthProvider,
+      signInAnonymously,
+      updateProfile,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      updateDoc,
+      doc,
+      serverTimestamp,
+      query,
+      orderBy,
+      limit,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getStorage,
+      ref,
+      uploadBytesResumable,
+      getDownloadURL,
+      deleteObject
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    /* ⚠️ এখানে Firebase Console থেকে আপনার কনফিগ বসান */
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // DOM Elements Map
+    const els = {
+      authSection: document.getElementById('authSection'),
+      chatSection: document.getElementById('chatSection'),
+      authForm: document.getElementById('authForm'),
+      tabLoginBtn: document.getElementById('tabLoginBtn'),
+      tabSignupBtn: document.getElementById('tabSignupBtn'),
+      tabSlider: document.getElementById('tabSlider'),
+      nameGroup: document.getElementById('nameGroup'),
+      authNameInput: document.getElementById('authNameInput'),
+      authEmailInput: document.getElementById('authEmailInput'),
+      authPasswordInput: document.getElementById('authPasswordInput'),
+      togglePasswordBtn: document.getElementById('togglePasswordBtn'),
+      authSubmitBtn: document.getElementById('authSubmitBtn'),
+      authErrorBanner: document.getElementById('authErrorBanner'),
+      authErrorText: document.getElementById('authErrorText'),
+      googleSignInBtn: document.getElementById('googleSignInBtn'),
+      anonymousSignInBtn: document.getElementById('anonymousSignInBtn'),
+      currentUserAvatar: document.getElementById('currentUserAvatar'),
+      currentUserName: document.getElementById('currentUserName'),
+      logoutBtn: document.getElementById('logoutBtn'),
+      messagesContainer: document.getElementById('messagesContainer'),
+      emptyState: document.getElementById('emptyState'),
+      scrollToBottomBtn: document.getElementById('scrollToBottomBtn'),
+      chatTextarea: document.getElementById('chatTextarea'),
+      sendMessageBtn: document.getElementById('sendMessageBtn'),
+      voiceRecordBtn: document.getElementById('voiceRecordBtn'),
+      mainInputBar: document.getElementById('mainInputBar'),
+      recordingBar: document.getElementById('recordingBar'),
+      recordingTimer: document.getElementById('recordingTimer'),
+      cancelRecordBtn: document.getElementById('cancelRecordBtn'),
+      stopAndSendRecordBtn: document.getElementById('stopAndSendRecordBtn'),
+      uploadProgressBarContainer: document.getElementById('uploadProgressBarContainer'),
+      uploadProgressBar: document.getElementById('uploadProgressBar'),
+      replyBanner: document.getElementById('replyBanner'),
+      replyBannerSender: document.getElementById('replyBannerSender'),
+      replyBannerText: document.getElementById('replyBannerText'),
+      closeReplyBtn: document.getElementById('closeReplyBtn'),
+      editBanner: document.getElementById('editBanner'),
+      editBannerText: document.getElementById('editBannerText'),
+      closeEditBtn: document.getElementById('closeEditBtn'),
+      attachmentToggleBtn: document.getElementById('attachmentToggleBtn'),
+      attachmentMenu: document.getElementById('attachmentMenu'),
+      attachPhotoBtn: document.getElementById('attachPhotoBtn'),
+      attachDocBtn: document.getElementById('attachDocBtn'),
+      attachAnyFileBtn: document.getElementById('attachAnyFileBtn'),
+      imageFileInput: document.getElementById('imageFileInput'),
+      docFileInput: document.getElementById('docFileInput'),
+      anyFileInput: document.getElementById('anyFileInput'),
+      emojiToggleBtn: document.getElementById('emojiToggleBtn'),
+      emojiPickerPopover: document.getElementById('emojiPickerPopover'),
+      emojiGrid: document.getElementById('emojiGrid'),
+      toastContainer: document.getElementById('toastContainer'),
+      imageModal: document.getElementById('imageModal'),
+      imageModalTarget: document.getElementById('imageModalTarget'),
+      closeImageModalBtn: document.getElementById('closeImageModalBtn'),
+      deleteConfirmModal: document.getElementById('deleteConfirmModal'),
+      cancelDeleteModalBtn: document.getElementById('cancelDeleteModalBtn'),
+      confirmDeleteModalBtn: document.getElementById('confirmDeleteModalBtn')
+    };
+
+    // State Variables
+    let currentUser = null;
+    let isAuthModeLogin = true;
+    let messagesUnsubscribe = null;
+    let activeReplyTo = null;
+    let activeEditingMessage = null;
+    let messageToDelete = null;
+    let activeAudioPlayer = null;
+    let activeAudioMsgId = null;
+
+    // Audio Recorder State
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordingStartTime = null;
+    let recordingTimerInterval = null;
+    let recordedAudioBlob = null;
+    let recordedDurationSec = 0;
+
+    // 100+ Emoji Database
+    const EMOJI_DATABASE = {
+      smileys: ["😀","😁","😂","🤣","😃","😄","😅","😆","😉","😊","😋","😎","😍","😘","🥰","😗","😙","😚","☺️","🙂","🤗","🤩","🤔","🤨","😐","😑","😶","🙄","😏","😣","😥","😮","🤐","😯","😪","😫","😴","😌","😛","😜","🤪","😝","🤤","😒","😓","😔","😕","🙃","🤑","😲","☹️","🙁","😖","😞","😟","😤","😢","😭","😦","😧","😨","😩","🤯","😬","😰","😱","🥵","🥶","😳","😵","😡","😠","🤬","😷","🤒","🤕","🤢","🤮","🤧","😇"],
+      gestures: ["👋","🤚","🖐️","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦵","🦶","👂","👃","🫀"],
+      hearts: ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","💌","💋","🫂","😻","🫶","💐","🌸","🌹","🌺","🌻","🌼"],
+      objects: ["🎉","🎊","🎈","🎂","🎁","🎇","🎆","🏆","🥇","🥈","🥉","⚽","🏀","🚀","✈️","🔥","⭐","🌟","✨","💡","📱","💻","📷","🎧","🎮","📚","☕","🍕","🍔","🍻","🍿","🪄","🔔","🔑","💎","👑","🌈","☀️","🌙","⚡"]
+    };
+
+    const WAVE_BAR_HEIGHTS = [20, 35, 60, 40, 85, 100, 70, 50, 30, 65, 80, 45, 90, 75, 40, 60, 95, 80, 55, 35, 70, 85, 60, 40, 30, 50, 40, 20];
+/* ═══════════════════════════════════════════════════════
+       UTILITY & HELPER FUNCTIONS
+       ═══════════════════════════════════════════════════════ */
+
+    /**
+     * HTML বিশেষ অক্ষর এনকোড করে XSS আক্রমণ প্রতিহত করে
+     * @param {string} str 
+     * @returns {string}
+     */
+    function escapeHtml(str) {
+      if (!str || typeof str !== 'string') return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    /**
+     * টাইমস্ট্যাম্প থেকে বাংলা সময়ের ফরম্যাট তৈরি করে (উদা: ১২:৪৫ PM)
+     * @param {Date|Object} timestamp
+     * @returns {string}
+     */
+    function formatTime(timestamp) {
+      if (!timestamp) return '';
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      return date.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    /**
+     * ক্যালেন্ডার অনুযায়ী তারিখ ফরম্যাট করে (আজ / গতকাল / নির্দিষ্ট তারিখ)
+     * @param {Date|Object} timestamp
+     * @returns {string}
+     */
+    function formatDate(timestamp) {
+      if (!timestamp) return '';
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+      const diffDays = Math.floor((today - messageDate) / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) return 'আজ';
+      if (diffDays === 1) return 'গতকাল';
+      return date.toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    /**
+     * বাইট সাইজকে রিডেবল আকারে রূপান্তর করে (KB / MB)
+     * @param {number} bytes 
+     * @returns {string}
+     */
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    /**
+     * সেকেন্ড থেকে অডিও সময় রূপান্তর (উদা: 00:15)
+     * @param {number} totalSeconds 
+     * @returns {string}
+     */
+    function formatDuration(totalSeconds) {
+      const sec = Math.floor(totalSeconds || 0);
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    /**
+     * টোস্ট নোটিফিকেশন প্রদর্শন করে
+     * @param {string} message 
+     * @param {'success'|'error'|'info'} type 
+     */
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast-item toast-${type}`;
+      
+      let iconSvg = '';
+      if (type === 'success') {
+        iconSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+      } else if (type === 'error') {
+        iconSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      } else {
+        iconSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+      }
+
+      toast.innerHTML = `${iconSvg}<span>${escapeHtml(message)}</span>`;
+      els.toastContainer.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(50px)';
+        setTimeout(() => toast.remove(), 250);
+      }, 3200);
+    }
+
+    /**
+     * বাটন লোডিং স্পিনার ও স্ট্যাটাস নিয়ন্ত্রণ
+     * @param {HTMLButtonElement} btn 
+     * @param {boolean} isLoading 
+     * @param {string} originalText 
+     */
+    function setLoading(btn, isLoading, originalText = '') {
+      if (isLoading) {
+        btn.classList.add('is-loading');
+        btn.disabled = true;
+      } else {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+        if (originalText) {
+          const textSpan = btn.querySelector('.btn-text');
+          if (textSpan) textSpan.textContent = originalText;
+        }
+      }
+    }
+
+    /**
+     * Firebase Auth ত্রুটির কোডকে প্রাঞ্জল বাংলায় রূপান্তর করে
+     * @param {string} code 
+     * @returns {string}
+     */
+    function mapAuthError(code) {
+      switch (code) {
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          return 'পাসওয়ার্ড বা ইমেইল সঠিক নয়।';
+        case 'auth/user-not-found':
+          return 'এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি।';
+        case 'auth/email-already-in-use':
+          return 'এই ইমেইল ইতিমধ্যে ব্যবহৃত হচ্ছে।';
+        case 'auth/invalid-email':
+          return 'ইমেইল ঠিকানাটি সঠিক নয়।';
+        case 'auth/weak-password':
+          return 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।';
+        case 'auth/popup-closed-by-user':
+          return 'লগইন উইন্ডো বন্ধ করা হয়েছে।';
+        case 'auth/network-request-failed':
+          return 'ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করুন।';
+        case 'auth/too-many-requests':
+          return 'অতিরিক্ত ভুলের কারণে সাময়িক স্থগিত। পরে চেষ্টা করুন।';
+        default:
+          return 'একটি অনাকাঙ্ক্ষিত ত্রুটি ঘটেছে। পুনরায় চেষ্টা করুন।';
+      }
+    }
+
+    /**
+     * স্ক্রোল কন্টেইনার নিচে নামায়
+     * @param {boolean} smooth 
+     */
+    function scrollToBottom(smooth = true) {
+      els.messagesContainer.scrollTo({
+        top: els.messagesContainer.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto'
+      });
+    }
+
+    /**
+     * স্মার্ট স্ক্রোল: ব্যবহারকারী একদম নিচে থাকলে তবেই স্বয়ংক্রিয় স্ক্রোল করবে
+     */
+    function smartScroll() {
+      const threshold = 140;
+      const isNearBottom = els.messagesContainer.scrollHeight - els.messagesContainer.scrollTop - els.messagesContainer.clientHeight < threshold;
+      if (isNearBottom) {
+        scrollToBottom(true);
+      } else {
+        els.scrollToBottomBtn.classList.add('show');
+      }
+    }
+
+    /**
+     * ক্লিপবোর্ডে টেক্সট কপি করে
+     * @param {string} text 
+     */
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('মেসেজ কপি হয়েছে', 'info');
+      } catch (err) {
+        showToast('কপি করতে ব্যর্থ হয়েছে', 'error');
+      }
+    }
+
+    /**
+     * ফুলস্ক্রিন ইমেজ মোডাল ওপেন
+     * @param {string} url 
+     */
+    function openImageModal(url) {
+      els.imageModalTarget.src = url;
+      els.imageModal.classList.add('show');
+    }
+
+    /**
+     * ইমেজ মোডাল ক্লোজ
+     */
+    function closeImageModal() {
+      els.imageModal.classList.remove('show');
+      els.imageModalTarget.src = '';
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       AUTHENTICATION MODULE
+       ═══════════════════════════════════════════════════════ */
+    function initAuth() {
+      // Tab switcher
+      els.tabLoginBtn.addEventListener('click', () => setAuthMode(true));
+      els.tabSignupBtn.addEventListener('click', () => setAuthMode(false));
+
+      // Show/Hide password
+      els.togglePasswordBtn.addEventListener('click', () => {
+        const isPass = els.authPasswordInput.type === 'password';
+        els.authPasswordInput.type = isPass ? 'text' : 'password';
+        els.togglePasswordBtn.style.color = isPass ? '#6366f1' : 'var(--text-muted)';
+      });
+
+      // Email/Password Submit
+      els.authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearAuthError();
+        const email = els.authEmailInput.value.trim();
+        const password = els.authPasswordInput.value;
+        const name = els.authNameInput.value.trim();
+
+        if (!email || !password) return;
+        if (!isAuthModeLogin && !name) {
+          showAuthError('অনুগ্রহ করে আপনার নাম লিখুন।');
+          return;
+        }
+
+        setLoading(els.authSubmitBtn, true);
+
+        try {
+          if (isAuthModeLogin) {
+            await signInWithEmailAndPassword(auth, email, password);
+            showToast('সফলভাবে লগইন হয়েছে', 'success');
+          } else {
+            const userCred = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(userCred.user, { displayName: name });
+            showToast('অ্যাকাউন্ট তৈরি সম্পন্ন হয়েছে', 'success');
+          }
+        } catch (error) {
+          console.error("Auth Error:", error);
+          showAuthError(mapAuthError(error.code));
+        } finally {
+          setLoading(els.authSubmitBtn, false, isAuthModeLogin ? 'লগইন করুন' : 'নিবন্ধন সম্পন্ন করুন');
+        }
+      });
+
+      // Google Login
+      els.googleSignInBtn.addEventListener('click', async () => {
+        clearAuthError();
+        try {
+          const provider = new GoogleAuthProvider();
+          await signInWithPopup(auth, provider);
+          showToast('গুগল দিয়ে লগইন সফল হয়েছে', 'success');
+        } catch (error) {
+          console.error("Google Sign-In Error:", error);
+          showAuthError(mapAuthError(error.code));
+        }
+      });
+
+      // Guest / Anonymous Login
+      els.anonymousSignInBtn.addEventListener('click', async () => {
+        clearAuthError();
+        try {
+          await signInAnonymously(auth);
+          showToast('গেস্ট মোডে প্রবেশ করা হয়েছে', 'info');
+        } catch (error) {
+          console.error("Anonymous Sign-In Error:", error);
+          showAuthError(mapAuthError(error.code));
+        }
+      });
+
+      // Logout
+      els.logoutBtn.addEventListener('click', async () => {
+        try {
+          if (activeAudioPlayer) {
+            activeAudioPlayer.pause();
+            activeAudioPlayer = null;
+          }
+          await signOut(auth);
+          showToast('লগআউট সম্পন্ন হয়েছে', 'info');
+        } catch (err) {
+          showToast('লগআউট ব্যর্থ হয়েছে', 'error');
+        }
+      });
+
+      // Auth State Observer
+      onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user) {
+          els.authSection.style.display = 'none';
+          els.chatSection.style.display = 'flex';
+          setupHeaderUser(user);
+          initChat();
+        } else {
+          if (messagesUnsubscribe) {
+            messagesUnsubscribe();
+            messagesUnsubscribe = null;
+          }
+          els.chatSection.style.display = 'none';
+          els.authSection.style.display = 'block';
+        }
+      });
+    }
+
+    function setAuthMode(isLogin) {
+      isAuthModeLogin = isLogin;
+      clearAuthError();
+      if (isLogin) {
+        els.tabLoginBtn.classList.add('active');
+        els.tabSignupBtn.classList.remove('active');
+        els.tabSlider.style.transform = 'translateX(0)';
+        els.nameGroup.style.display = 'none';
+        els.authSubmitBtn.querySelector('.btn-text').textContent = 'লগইন করুন';
+      } else {
+        els.tabSignupBtn.classList.add('active');
+        els.tabLoginBtn.classList.remove('active');
+        els.tabSlider.style.transform = 'translateX(100%)';
+        els.nameGroup.style.display = 'block';
+        els.authSubmitBtn.querySelector('.btn-text').textContent = 'নিবন্ধন সম্পন্ন করুন';
+      }
+    }
+
+    function showAuthError(msg) {
+      els.authErrorText.textContent = msg;
+      els.authErrorBanner.classList.add('show');
+    }
+
+    function clearAuthError() {
+      els.authErrorBanner.classList.remove('show');
+    }
+
+    function setupHeaderUser(user) {
+      const displayName = user.displayName || (user.isAnonymous ? 'গেস্ট ইউজার' : user.email.split('@')[0]);
+      els.currentUserName.textContent = displayName;
+      
+      if (user.photoURL) {
+        els.currentUserAvatar.innerHTML = `<img src="${user.photoURL}" alt="avatar" style="width:100%;height:100%;border-radius:14px;object-fit:cover;" />`;
+      } else {
+        els.currentUserAvatar.textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       CHAT CORE & REALTIME LISTENER
+       ═══════════════════════════════════════════════════════ */
+    function initChat() {
+      const messagesRef = collection(db, 'messages');
+      const q = query(messagesRef, orderBy('createdAt', 'asc'), limit(200));
+
+      messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+        if (snapshot.empty) {
+          els.emptyState.style.display = 'flex';
+          els.messagesContainer.querySelectorAll('.message-row, .date-separator').forEach(el => el.remove());
+          return;
+        }
+
+        els.emptyState.style.display = 'none';
+        renderMessageList(snapshot.docs);
+        smartScroll();
+      }, (err) => {
+        console.error("Messages onSnapshot Error:", err);
+        showToast('মেসেজ লোড হতে সমস্যা হচ্ছে', 'error');
+      });
+    }
+
+    /**
+     * মেসেজ তালিকা রেন্ডার করে
+     * @param {Array} docs 
+     */
+    function renderMessageList(docs) {
+      els.messagesContainer.querySelectorAll('.message-row, .date-separator').forEach(el => el.remove());
+
+      let lastDateStr = null;
+      let lastSenderId = null;
+      const fragment = document.createDocumentFragment();
+
+      docs.forEach((docSnap) => {
+        const msg = { id: docSnap.id, ...docSnap.data() };
+        const dateStr = formatDate(msg.createdAt);
+
+        // Date Separator
+        if (dateStr && dateStr !== lastDateStr) {
+          const dateDiv = document.createElement('div');
+          dateDiv.className = 'date-separator';
+          dateDiv.innerHTML = `<span class="date-badge">${dateStr}</span>`;
+          fragment.appendChild(dateDiv);
+          lastDateStr = dateStr;
+          lastSenderId = null;
+        }
+
+        const isOwn = currentUser && msg.senderId === currentUser.uid;
+        const isSequential = lastSenderId === msg.senderId;
+        lastSenderId = msg.senderId;
+
+        const row = document.createElement('div');
+        row.className = `message-row ${isOwn ? 'own' : 'other'}${isSequential ? ' grouped-middle' : ' grouped-start'}`;
+        row.id = `msg-${msg.id}`;
+
+        row.innerHTML = renderMessage(msg, isOwn, !isSequential);
+        fragment.appendChild(row);
+      });
+
+      els.messagesContainer.appendChild(fragment);
+    }
+
+    /**
+     * একক মেসেজ বাবলের HTML তৈরি করে
+     * @param {Object} msg 
+     * @param {boolean} isOwn 
+     * @param {boolean} showAvatar 
+     * @returns {string}
+     */
+    function renderMessage(msg, isOwn, showAvatar) {
+      // Avatar Slot
+      let avatarHtml = '';
+      if (!isOwn) {
+        avatarHtml = `<div class="msg-avatar-slot">`;
+        if (showAvatar) {
+          if (msg.senderPhoto) {
+            avatarHtml += `<img src="${msg.senderPhoto}" class="msg-avatar" alt="avatar" />`;
+          } else {
+            const initial = (msg.senderName || 'U').charAt(0).toUpperCase();
+            avatarHtml += `<div class="msg-avatar">${initial}</div>`;
+          }
+        }
+        avatarHtml += `</div>`;
+      }
+
+      // Soft Deleted State
+      if (msg.deleted) {
+        return `
+          ${avatarHtml}
+          <div class="msg-bubble-wrap">
+            <div class="msg-bubble is-deleted">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              <span>এই মেসেজ মুছে ফেলা হয়েছে</span>
+            </div>
+          </div>
+        `;
+      }
+
+      // Quoted Reply Preview
+      let quoteHtml = '';
+      if (msg.replyTo) {
+        let snippet = msg.replyTo.text || 'মিডিয়া ফাইল';
+        if (msg.replyTo.type === 'image') snippet = '📷 ছবি';
+        if (msg.replyTo.type === 'voice') snippet = '🎤 ভয়েস বার্তা';
+        if (msg.replyTo.type === 'file') snippet = '📄 ফাইল';
+
+        quoteHtml = `
+          <div class="msg-quote" data-jump="${msg.replyTo.messageId}">
+            <div class="quote-sender">${escapeHtml(msg.replyTo.senderName)}</div>
+            <div class="quote-text">${escapeHtml(snippet)}</div>
+          </div>
+        `;
+      }
+
+      // Bubble Body Content
+      let contentHtml = '';
+      switch (msg.type) {
+        case 'image':
+          contentHtml = `
+            <div class="msg-image-wrap" data-img-url="${msg.mediaUrl}">
+              <img src="${msg.mediaUrl}" class="msg-image-thumb" loading="lazy" alt="ছবি" />
+            </div>
+            ${msg.text ? `<div style="margin-top:6px;">${escapeHtml(msg.text)}</div>` : ''}
+          `;
+          break;
+        case 'voice':
+          contentHtml = renderVoicePlayer(msg);
+          break;
+        case 'file':
+          contentHtml = renderFileCard(msg);
+          break;
+        case 'text':
+        default:
+          contentHtml = `<div class="msg-text-body" style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(msg.text)}</div>`;
+          break;
+      }
+
+      // Time & Meta
+      const timeStr = formatTime(msg.createdAt);
+      const editedStr = msg.edited ? `<span class="edited-badge">(সম্পাদিত)</span>` : '';
+      const ticksSvg = isOwn ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 6 9 17 4 12"/><polyline points="22 10 13 21 8 16"/></svg>` : '';
+
+      // Action Toolbar
+      const editBtnHtml = (isOwn && msg.type === 'text') ? `
+        <button class="action-btn" data-action="edit" title="সম্পাদনা করুন" aria-label="সম্পাদনা">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      ` : '';
+
+      const deleteBtnHtml = isOwn ? `
+        <button class="action-btn btn-danger" data-action="delete" title="মুছে ফেলুন" aria-label="মুছে ফেলুন">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      ` : '';
+
+      const copyBtnHtml = msg.type === 'text' ? `
+        <button class="action-btn" data-action="copy" title="কপি করুন" aria-label="কপি">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      ` : '';
+
+      const senderHeader = (!isOwn && showAvatar) ? `<div class="msg-sender-name">${escapeHtml(msg.senderName || 'ব্যবহারকারী')}</div>` : '';
+
+      return `
+        ${avatarHtml}
+        <div class="msg-bubble-wrap">
+          ${senderHeader}
+          <div class="msg-action-bar">
+            <button class="action-btn" data-action="reply" title="উত্তর দিন" aria-label="উত্তর">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+            </button>
+            ${copyBtnHtml}
+            ${editBtnHtml}
+            ${deleteBtnHtml}
+          </div>
+          <div class="msg-bubble">
+            ${quoteHtml}
+            ${contentHtml}
+            <div class="msg-meta">
+              ${editedStr}
+              <span>${timeStr}</span>
+              ${ticksSvg}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * কাস্টম অডিও ভয়েস প্লেয়ার HTML
+     * @param {Object} msg 
+     * @returns {string}
+     */
+    function renderVoicePlayer(msg) {
+      const durationText = formatDuration(msg.duration || 0);
+      const barsHtml = WAVE_BAR_HEIGHTS.map((h, i) => 
+        `<div class="wave-bar" data-idx="${i}" style="height:${h}%;"></div>`
+      ).join('');
+
+      return `
+        <div class="msg-voice-player" data-audio-url="${msg.mediaUrl}" data-audio-id="${msg.id}" data-duration="${msg.duration || 0}">
+          <button class="voice-play-btn" type="button" aria-label="প্লে অডিও">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+          <div class="voice-body">
+            <div class="voice-waveform">${barsHtml}</div>
+            <div class="voice-bottom-meta">
+              <span class="voice-time-display">00:00 / ${durationText}</span>
+              <span class="voice-speed-badge">1x</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * ফাইল ডাউনলোড কার্ড HTML
+     * @param {Object} msg 
+     * @returns {string}
+     */
+    function renderFileCard(msg) {
+      const fileName = msg.mediaName || 'ফাইল';
+      const fileSize = formatBytes(msg.mediaSize || 0);
+
+      return `
+        <a href="${msg.mediaUrl}" target="_blank" rel="noopener noreferrer" class="msg-file-card" download="${escapeHtml(fileName)}">
+          <div class="file-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="file-details">
+            <div class="file-name" title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</div>
+            <div class="file-size">${fileSize}</div>
+          </div>
+          <div class="file-download-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+        </a>
+      `;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SEND HANDLERS (TEXT, IMAGE, FILE, VOICE)
+       ═══════════════════════════════════════════════════════ */
+
+    async function handleSendText() {
+      const text = els.chatTextarea.value.trim();
+      if (!text || !currentUser) return;
+
+      // Edit Mode
+      if (activeEditingMessage) {
+        try {
+          const msgRef = doc(db, 'messages', activeEditingMessage.id);
+          await updateDoc(msgRef, {
+            text: text,
+            edited: true,
+            updatedAt: serverTimestamp()
+          });
+          showToast('মেসেজ সম্পাদিত হয়েছে', 'success');
+          cancelEdit();
+        } catch (err) {
+          console.error("Edit Error:", err);
+          showToast('মেসেজ সম্পাদনা ব্যর্থ হয়েছে', 'error');
+        }
+        return;
+      }
+
+      // New Message
+      const messagePayload = {
+        text: text,
+        senderId: currentUser.uid,
+        senderName: currentUser.displayName || (currentUser.isAnonymous ? 'গেস্ট' : currentUser.email.split('@')[0]),
+        senderPhoto: currentUser.photoURL || null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        type: 'text',
+        mediaUrl: null,
+        mediaName: null,
+        mediaSize: null,
+        duration: null,
+        replyTo: activeReplyTo ? {
+          messageId: activeReplyTo.id,
+          senderName: activeReplyTo.senderName,
+          text: activeReplyTo.text || '',
+          type: activeReplyTo.type
+        } : null,
+        edited: false,
+        deleted: false
+      };
+
+      els.chatTextarea.value = '';
+      autoResizeTextarea();
+      cancelReply();
+
+      try {
+        await addDoc(collection(db, 'messages'), messagePayload);
+      } catch (err) {
+        console.error("Send Text Error:", err);
+        showToast('মেসেজ পাঠাতে সমস্যা হয়েছে', 'error');
+      }
+    }
+
+    async function handleSendImage(file) {
+      if (!file || !currentUser) return;
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('ছবি সর্বোচ্চ ৫ মেগাবাইট হতে পারে', 'error');
+        return;
+      }
+
+      const storagePath = `chat-images/${currentUser.uid}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const storageRef = ref(storage, storagePath);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      setUploadProgress(true, 0);
+
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(true, progress);
+        },
+        (error) => {
+          console.error("Image Upload Error:", error);
+          setUploadProgress(false, 0);
+          showToast('ছবি আপলোড ব্যর্থ হয়েছে', 'error');
+        },
+        async () => {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          setUploadProgress(false, 100);
+
+          await addDoc(collection(db, 'messages'), {
+            text: '',
+            senderId: currentUser.uid,
+            senderName: currentUser.displayName || (currentUser.isAnonymous ? 'গেস্ট' : currentUser.email.split('@')[0]),
+            senderPhoto: currentUser.photoURL || null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            type: 'image',
+            mediaUrl: downloadUrl,
+            mediaName: file.name,
+            mediaSize: file.size,
+            duration: null,
+            replyTo: activeReplyTo ? {
+              messageId: activeReplyTo.id,
+              senderName: activeReplyTo.senderName,
+              text: activeReplyTo.text || '',
+              type: activeReplyTo.type
+            } : null,
+            edited: false,
+            deleted: false
+          });
+          cancelReply();
+          showToast('ছবি পাঠানো হয়েছে', 'success');
+        }
+      );
+    }
+
+    async function handleSendFile(file) {
+      if (!file || !currentUser) return;
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('ফাইল সর্বোচ্চ ১০ মেগাবাইট হতে পারে', 'error');
+        return;
+      }
+
+      const storagePath = `chat-files/${currentUser.uid}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const storageRef = ref(storage, storagePath);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      setUploadProgress(true, 0);
+
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(true, progress);
+        },
+        (error) => {
+          console.error("File Upload Error:", error);
+          setUploadProgress(false, 0);
+          showToast('ফাইল আপলোড ব্যর্থ হয়েছে', 'error');
+        },
+        async () => {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          setUploadProgress(false, 100);
+
+          await addDoc(collection(db, 'messages'), {
+            text: '',
+            senderId: currentUser.uid,
+            senderName: currentUser.displayName || (currentUser.isAnonymous ? 'গেস্ট' : currentUser.email.split('@')[0]),
+            senderPhoto: currentUser.photoURL || null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            type: 'file',
+            mediaUrl: downloadUrl,
+            mediaName: file.name,
+            mediaSize: file.size,
+            duration: null,
+            replyTo: activeReplyTo ? {
+              messageId: activeReplyTo.id,
+              senderName: activeReplyTo.senderName,
+              text: activeReplyTo.text || '',
+              type: activeReplyTo.type
+            } : null,
+            edited: false,
+            deleted: false
+          });
+          cancelReply();
+          showToast('ফাইল পাঠানো হয়েছে', 'success');
+        }
+      );
+    }
+
+    async function handleSendVoice(audioBlob, durationSec) {
+      if (!audioBlob || !currentUser) return;
+
+      const ext = audioBlob.type.includes('mp4') ? 'mp4' : 'webm';
+      const storagePath = `chat-voice/${currentUser.uid}/${Date.now()}.${ext}`;
+      const storageRef = ref(storage, storagePath);
+      const uploadTask = uploadBytesResumable(storageRef, audioBlob);
+
+      setUploadProgress(true, 0);
+
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(true, progress);
+        },
+        (error) => {
+          console.error("Voice Upload Error:", error);
+          setUploadProgress(false, 0);
+          showToast('ভয়েস মেসেজ আপলোড ব্যর্থ হয়েছে', 'error');
+        },
+        async () => {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          setUploadProgress(false, 100);
+
+          await addDoc(collection(db, 'messages'), {
+            text: '',
+            senderId: currentUser.uid,
+            senderName: currentUser.displayName || (currentUser.isAnonymous ? 'গেস্ট' : currentUser.email.split('@')[0]),
+            senderPhoto: currentUser.photoURL || null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            type: 'voice',
+            mediaUrl: downloadUrl,
+            mediaName: `voice_${Date.now()}.${ext}`,
+            mediaSize: audioBlob.size,
+            duration: Math.max(1, Math.round(durationSec)),
+            replyTo: activeReplyTo ? {
+              messageId: activeReplyTo.id,
+              senderName: activeReplyTo.senderName,
+              text: activeReplyTo.text || '',
+              type: activeReplyTo.type
+            } : null,
+            edited: false,
+            deleted: false
+          });
+          cancelReply();
+          showToast('ভয়েস মেসেজ পাঠানো হয়েছে', 'success');
+        }
+      );
+    }
+
+    function setUploadProgress(show, percent) {
+      if (show) {
+        els.uploadProgressBarContainer.classList.add('show');
+        els.uploadProgressBar.style.width = `${percent}%`;
+      } else {
+        els.uploadProgressBarContainer.classList.remove('show');
+        els.uploadProgressBar.style.width = '0%';
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       VOICE RECORDING (MEDIARECORDER API)
+       ═══════════════════════════════════════════════════════ */
+
+    async function startRecording() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast('আপনার ব্রাউজারে ভয়েস রেকর্ড সমর্থিত নয়।', 'error');
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+
+        let mimeType = 'audio/webm;codecs=opus';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/webm';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'audio/mp4';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+              mimeType = '';
+            }
+          }
+        }
+
+        mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          stream.getTracks().forEach(track => track.stop());
+          if (audioChunks.length > 0) {
+            recordedAudioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+          }
+        };
+
+        mediaRecorder.start(100);
+        recordingStartTime = Date.now();
+
+        els.mainInputBar.style.display = 'none';
+        els.recordingBar.classList.add('show');
+        els.recordingTimer.textContent = '00:00';
+
+        recordingTimerInterval = setInterval(() => {
+          const elapsed = (Date.now() - recordingStartTime) / 1000;
+          recordedDurationSec = elapsed;
+          els.recordingTimer.textContent = formatDuration(elapsed);
+          if (elapsed >= 120) {
+            stopRecording(false);
+          }
+        }, 500);
+
+      } catch (err) {
+        console.error("Mic Error:", err);
+        showToast('মাইক্রোফোন ব্যবহারের অনুমতি দেওয়া হয়নি।', 'error');
+      }
+    }
+
+    function stopRecording(isCancel = false) {
+      if (recordingTimerInterval) {
+        clearInterval(recordingTimerInterval);
+        recordingTimerInterval = null;
+      }
+
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+
+      els.recordingBar.classList.remove('show');
+      els.mainInputBar.style.display = 'flex';
+
+      if (isCancel) {
+        audioChunks = [];
+        recordedAudioBlob = null;
+        showToast('রেকর্ডিং বাতিল করা হয়েছে', 'info');
+      } else {
+        setTimeout(() => {
+          if (recordedAudioBlob && recordedAudioBlob.size > 0) {
+            handleSendVoice(recordedAudioBlob, recordedDurationSec);
+          } else {
+            showToast('রেকর্ড করা অডিও পাওয়া যায়নি', 'error');
+          }
+          audioChunks = [];
+          recordedAudioBlob = null;
+        }, 200);
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       CUSTOM AUDIO PLAYBACK CONTROLLER
+       ═══════════════════════════════════════════════════════ */
+
+    function handleVoicePlayToggle(playerEl) {
+      const audioUrl = playerEl.dataset.audioUrl;
+      const audioId = playerEl.dataset.audioId;
+      const playBtn = playerEl.querySelector('.voice-play-btn');
+      const timeDisplay = playerEl.querySelector('.voice-time-display');
+      const waveBars = playerEl.querySelectorAll('.wave-bar');
+      const speedBadge = playerEl.querySelector('.voice-speed-badge');
+      const totalDuration = parseFloat(playerEl.dataset.duration) || 0;
+
+      if (activeAudioPlayer && activeAudioMsgId !== audioId) {
+        activeAudioPlayer.pause();
+        resetVoicePlayerUI(activeAudioMsgId);
+      }
+
+      if (activeAudioPlayer && activeAudioMsgId === audioId) {
+        if (activeAudioPlayer.paused) {
+          activeAudioPlayer.play();
+          playBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+        } else {
+          activeAudioPlayer.pause();
+          playBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+        }
+        return;
+      }
+
+      const audio = new Audio(audioUrl);
+      activeAudioPlayer = audio;
+      activeAudioMsgId = audioId;
+
+      playBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+      audio.play().catch(err => {
+        console.error("Audio Play Error:", err);
+        showToast('অডিও প্লে করতে সমস্যা হয়েছে', 'error');
+      });
+
+      speedBadge.onclick = (e) => {
+        e.stopPropagation();
+        if (audio.playbackRate === 1) {
+          audio.playbackRate = 1.5;
+          speedBadge.textContent = '1.5x';
+        } else if (audio.playbackRate === 1.5) {
+          audio.playbackRate = 2;
+          speedBadge.textContent = '2x';
+        } else {
+          audio.playbackRate = 1;
+          speedBadge.textContent = '1x';
+        }
+      };
+
+      const waveformEl = playerEl.querySelector('.voice-waveform');
+      waveformEl.onclick = (e) => {
+        const rect = waveformEl.getBoundingClientRect();
+        const clickRatio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        audio.currentTime = clickRatio * (audio.duration || totalDuration);
+      };
+
+      audio.ontimeupdate = () => {
+        const current = audio.currentTime;
+        const total = audio.duration || totalDuration;
+        timeDisplay.textContent = `${formatDuration(current)} / ${formatDuration(total)}`;
+        
+        const pct = current / total;
+        const playedCount = Math.floor(pct * waveBars.length);
+        waveBars.forEach((bar, idx) => {
+          if (idx <= playedCount) bar.classList.add('played');
+          else bar.classList.remove('played');
+        });
+      };
+
+      audio.onended = () => {
+        playBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+        timeDisplay.textContent = `00:00 / ${formatDuration(totalDuration)}`;
+        waveBars.forEach(bar => bar.classList.remove('played'));
+        activeAudioPlayer = null;
+        activeAudioMsgId = null;
+      };
+    }
+
+    function resetVoicePlayerUI(msgId) {
+      if (!msgId) return;
+      const player = document.querySelector(`.msg-voice-player[data-audio-id="${msgId}"]`);
+      if (!player) return;
+      const playBtn = player.querySelector('.voice-play-btn');
+      const waveBars = player.querySelectorAll('.wave-bar');
+      const timeDisplay = player.querySelector('.voice-time-display');
+      const duration = player.dataset.duration || 0;
+
+      if (playBtn) playBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+      if (timeDisplay) timeDisplay.textContent = `00:00 / ${formatDuration(duration)}`;
+      waveBars.forEach(bar => bar.classList.remove('played'));
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       REPLY, EDIT & DELETE ACTIONS
+       ═══════════════════════════════════════════════════════ */
+
+    function setReplyTo(msg) {
+      activeReplyTo = msg;
+      cancelEdit();
+      els.replyBannerSender.textContent = `উত্তরে: ${msg.senderName || 'ব্যবহারকারী'}`;
+      let textPreview = msg.text || '';
+      if (msg.type === 'image') textPreview = '📷 ছবি';
+      if (msg.type === 'voice') textPreview = '🎤 ভয়েস বার্তা';
+      if (msg.type === 'file') textPreview = '📄 ফাইল';
+      els.replyBannerText.textContent = textPreview;
+      els.replyBanner.classList.add('show');
+      els.chatTextarea.focus();
+    }
+
+    function cancelReply() {
+      activeReplyTo = null;
+      els.replyBanner.classList.remove('show');
+    }
+
+    function startEdit(msg) {
+      if (msg.type !== 'text') return;
+      activeEditingMessage = msg;
+      cancelReply();
+      els.editBannerText.textContent = msg.text;
+      els.editBanner.classList.add('show');
+      els.chatTextarea.value = msg.text;
+      autoResizeTextarea();
+      els.chatTextarea.focus();
+      els.sendMessageBtn.disabled = false;
+    }
+
+    function cancelEdit() {
+      activeEditingMessage = null;
+      els.editBanner.classList.remove('show');
+      els.chatTextarea.value = '';
+      autoResizeTextarea();
+      els.sendMessageBtn.disabled = true;
+    }
+
+    function openDeleteModal(msg) {
+      messageToDelete = msg;
+      els.deleteConfirmModal.classList.add('show');
+    }
+
+    async function executeDeleteMessage() {
+      if (!messageToDelete) return;
+      const msg = messageToDelete;
+      els.deleteConfirmModal.classList.remove('show');
+      messageToDelete = null;
+
+      try {
+        if (msg.mediaUrl) {
+          try {
+            const fileRef = ref(storage, msg.mediaUrl);
+            await deleteObject(fileRef);
+          } catch (storageErr) {
+            console.warn("Storage deletion warning:", storageErr);
+          }
+        }
+
+        const msgRef = doc(db, 'messages', msg.id);
+        await updateDoc(msgRef, {
+          deleted: true,
+          text: 'এই মেসেজ মুছে ফেলা হয়েছে',
+          mediaUrl: null,
+          mediaName: null,
+          mediaSize: null,
+          duration: null,
+          updatedAt: serverTimestamp()
+        });
+
+        showToast('মেসেজটি মুছে ফেলা হয়েছে', 'info');
+      } catch (err) {
+        console.error("Delete Error:", err);
+        showToast('মেসেজ মুছতে ব্যর্থ হয়েছে', 'error');
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       EMOJI & TEXTAREA CONTROLS
+       ═══════════════════════════════════════════════════════ */
+
+    function renderEmojiGrid(category = 'smileys') {
+      const emojis = EMOJI_DATABASE[category] || EMOJI_DATABASE.smileys;
+      els.emojiGrid.innerHTML = emojis.map(emoji => 
+        `<button class="emoji-btn" type="button" data-emoji="${emoji}">${emoji}</button>`
+      ).join('');
+    }
+
+    function insertEmoji(emoji) {
+      const input = els.chatTextarea;
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const text = input.value;
+      input.value = text.substring(0, start) + emoji + text.substring(end);
+      input.selectionStart = input.selectionEnd = start + emoji.length;
+      autoResizeTextarea();
+      input.focus();
+      els.sendMessageBtn.disabled = !input.value.trim();
+    }
+
+    function autoResizeTextarea() {
+      const textarea = els.chatTextarea;
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+      els.sendMessageBtn.disabled = !textarea.value.trim();
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       EVENT LISTENERS & BINDINGS
+       ═══════════════════════════════════════════════════════ */
+
+    function bindEvents() {
+      els.chatTextarea.addEventListener('input', autoResizeTextarea);
+      els.chatTextarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if (!els.sendMessageBtn.disabled) handleSendText();
+        }
+      });
+
+      els.sendMessageBtn.addEventListener('click', handleSendText);
+      els.closeReplyBtn.addEventListener('click', cancelReply);
+      els.closeEditBtn.addEventListener('click', cancelEdit);
+
+      els.attachmentToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        els.emojiPickerPopover.classList.remove('show');
+        els.attachmentMenu.classList.toggle('show');
+      });
+
+      els.attachPhotoBtn.addEventListener('click', () => {
+        els.attachmentMenu.classList.remove('show');
+        els.imageFileInput.click();
+      });
+
+      els.attachDocBtn.addEventListener('click', () => {
+        els.attachmentMenu.classList.remove('show');
+        els.docFileInput.click();
+      });
+
+      els.attachAnyFileBtn.addEventListener('click', () => {
+        els.attachmentMenu.classList.remove('show');
+        els.anyFileInput.click();
+      });
+
+      els.imageFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleSendImage(file);
+        e.target.value = '';
+      });
+
+      els.docFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleSendFile(file);
+        e.target.value = '';
+      });
+
+      els.anyFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleSendFile(file);
+        e.target.value = '';
+      });
+
+      els.voiceRecordBtn.addEventListener('click', startRecording);
+      els.cancelRecordBtn.addEventListener('click', () => stopRecording(true));
+      els.stopAndSendRecordBtn.addEventListener('click', () => stopRecording(false));
+
+      els.emojiToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        els.attachmentMenu.classList.remove('show');
+        els.emojiPickerPopover.classList.toggle('show');
+        if (els.emojiPickerPopover.classList.contains('show')) {
+          renderEmojiGrid('smileys');
+        }
+      });
+
+      document.querySelectorAll('.emoji-cat-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.emoji-cat-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderEmojiGrid(btn.dataset.cat);
+        });
+      });
+
+      els.emojiGrid.addEventListener('click', (e) => {
+        const btn = e.target.closest('.emoji-btn');
+        if (btn) insertEmoji(btn.dataset.emoji);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!els.attachmentMenu.contains(e.target) && e.target !== els.attachmentToggleBtn) {
+          els.attachmentMenu.classList.remove('show');
+        }
+        if (!els.emojiPickerPopover.contains(e.target) && e.target !== els.emojiToggleBtn) {
+          els.emojiPickerPopover.classList.remove('show');
+        }
+      });
+
+      els.scrollToBottomBtn.addEventListener('click', () => {
+        scrollToBottom(true);
+        els.scrollToBottomBtn.classList.remove('show');
+      });
+
+      els.messagesContainer.addEventListener('scroll', () => {
+        const threshold = 140;
+        const isNearBottom = els.messagesContainer.scrollHeight - els.messagesContainer.scrollTop - els.messagesContainer.clientHeight < threshold;
+        if (isNearBottom) {
+          els.scrollToBottomBtn.classList.remove('show');
+        }
+      });
+
+      els.closeImageModalBtn.addEventListener('click', closeImageModal);
+      els.imageModal.addEventListener('click', (e) => {
+        if (e.target === els.imageModal) closeImageModal();
+      });
+
+      els.cancelDeleteModalBtn.addEventListener('click', () => {
+        els.deleteConfirmModal.classList.remove('show');
+        messageToDelete = null;
+      });
+
+      els.confirmDeleteModalBtn.addEventListener('click', executeDeleteMessage);
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeImageModal();
+          els.deleteConfirmModal.classList.remove('show');
+          els.attachmentMenu.classList.remove('show');
+          els.emojiPickerPopover.classList.remove('show');
+          cancelReply();
+          cancelEdit();
+        }
+      });
+
+      // Delegation for Message Actions
+      els.messagesContainer.addEventListener('click', (e) => {
+        const imgWrap = e.target.closest('.msg-image-wrap');
+        if (imgWrap) {
+          openImageModal(imgWrap.dataset.imgUrl);
+          return;
+        }
+
+        const voicePlayBtn = e.target.closest('.voice-play-btn');
+        if (voicePlayBtn) {
+          const voicePlayer = voicePlayBtn.closest('.msg-voice-player');
+          if (voicePlayer) handleVoicePlayToggle(voicePlayer);
+          return;
+        }
+
+        const quoteCard = e.target.closest('.msg-quote');
+        if (quoteCard) {
+          const targetId = quoteCard.dataset.jump;
+          const targetRow = document.getElementById(`msg-${targetId}`);
+          if (targetRow) {
+            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            targetRow.style.transition = 'transform 0.3s ease';
+            targetRow.style.transform = 'scale(1.04)';
+            setTimeout(() => targetRow.style.transform = 'scale(1)', 500);
+          } else {
+            showToast('মূল মেসেজটি বর্তমানে লোড করা নেই।', 'info');
+          }
+          return;
+        }
+
+        const actionBtn = e.target.closest('.action-btn');
+        if (actionBtn) {
+          const action = actionBtn.dataset.action;
+          const row = actionBtn.closest('.message-row');
+          const msgId = row ? row.id.replace('msg-', '') : null;
+          if (!msgId) return;
+
+          const textBody = row.querySelector('.msg-text-body');
+          const senderName = row.querySelector('.msg-sender-name') ? row.querySelector('.msg-sender-name').textContent : 'ব্যবহারকারী';
+          
+          const messageObject = {
+            id: msgId,
+            senderName: senderName,
+            text: textBody ? textBody.textContent : '',
+            type: row.querySelector('.msg-image-wrap') ? 'image' : (row.querySelector('.msg-voice-player') ? 'voice' : (row.querySelector('.msg-file-card') ? 'file' : 'text'))
+          };
+
+          if (action === 'reply') setReplyTo(messageObject);
+          else if (action === 'copy') { if (textBody) copyToClipboard(textBody.textContent); }
+          else if (action === 'edit') startEdit(messageObject);
+          else if (action === 'delete') openDeleteModal(messageObject);
+        }
+      });
+    }
+
+    // Initialize application
+    window.addEventListener('DOMContentLoaded', () => {
+      initAuth();
+      bindEvents();
+    });
+  </script>
+</body>
+</html>
